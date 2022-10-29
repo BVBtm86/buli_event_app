@@ -1,1 +1,1 @@
-# buli_event_app
+# Bundesliga Game Events Application
