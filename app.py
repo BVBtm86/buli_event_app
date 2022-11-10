@@ -1,10 +1,13 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+import pandas as pd
+import numpy as np
 from supabase import create_client
 from PIL import Image
 from page_scripts.game_page import game_events
 from page_scripts.team_page import team_events
 from page_scripts.player_page import player_events
+
 
 # ##### Logo and App Info
 buli_logo = Image.open('images/Bundesliga.png')
@@ -21,10 +24,11 @@ with buli_container:
     with buli_logo_col:
         st.image(buli_logo, use_column_width=True)
     with text_col:
+        st.header("")
         st.markdown(f"<h1>Bundesliga Game Events <font color = #d20614>{season}</font></h1>", unsafe_allow_html=True)
 
 
-# ##### Supabase Connection
+# ##### Supabase Connection #####
 @st.experimental_singleton
 def init_connection():
     url = st.secrets["supabase_url"]
@@ -35,17 +39,70 @@ def init_connection():
 supabase = init_connection()
 
 
-# ##### Main Application
+# ##### Supabase Table Queries
+@st.experimental_memo(ttl=600)
+def info_query():
+    """ Return Game Info """
+    game_info_query = supabase.table('game_info_stats').select('*').execute().data
+    game_info = pd.DataFrame(game_info_query)
+
+    return game_info
+
+
+@st.experimental_memo(ttl=600)
+def event_query(team, match_day):
+    """ Return Game Events """
+    game_team_query = supabase.table('game_events_stats').select('*').\
+        eq('Team', team).eq('Match Day', match_day).execute().data
+    game_team_df = pd.DataFrame(game_team_query)
+    game_opp_query = supabase.table('game_events_stats').select('*').\
+        eq('Opponent', team).eq('Match Day', match_day).execute().data
+    game_opp_df = pd.DataFrame(game_opp_query)
+
+    if game_team_df['Venue'].unique()[0] == 'Away':
+        game_team_df['Start X'] = np.abs(game_team_df['Start X'] - 100)
+        game_team_df['End X'] = np.abs(game_team_df['Start X'] - 100)
+        game_team_df['Start Y'] = np.abs(game_team_df['Start Y'] - 100)
+        game_team_df['End Y'] = np.abs(game_team_df['End Y'] - 100)
+
+    if game_opp_df['Venue'].unique()[0] == 'Away':
+        game_opp_df['Start X'] = np.abs(game_opp_df['Start X'] - 100)
+        game_opp_df['End X'] = np.abs(game_opp_df['Start X'] - 100)
+        game_opp_df['Start Y'] = np.abs(game_opp_df['Start Y'] - 100)
+        game_opp_df['End Y'] = np.abs(game_opp_df['End Y'] - 100)
+
+    game_event_df = pd.concat([game_team_df, game_opp_df], axis=0)
+
+    return game_event_df
+
+
+@st.experimental_memo(ttl=600)
+def players_info_query(team, match_day):
+    """ Return Player Game Info """
+    game_player_query_team = supabase.table('game_player_info').select('*').\
+        eq('Team', team).eq('Match Day', match_day).execute().data
+    game_player_team_df = pd.DataFrame(game_player_query_team)
+    game_player_query_opp = supabase.table('game_player_info').select('*').\
+        eq('Opponent', team).eq('Match Day', match_day).execute().data
+    game_player_opp_df = pd.DataFrame(game_player_query_opp)
+
+    game_players_df = pd.concat([game_player_team_df, game_player_opp_df], axis=0)
+    game_players_df.dropna(inplace=True)
+
+    return game_players_df
+
+
+# ##### Main App #####
 def main():
     # Option Menu Bar
     statistics_type = ["Home", "Game", "Team", "Player"]
     with st.sidebar:
         st.subheader("Select Page")
         event_analysis = option_menu(menu_title=None,
-                                       options=statistics_type,
-                                       icons=["house-fill", "calendar2-event", "diagram-3-fill",
-                                              "person-lines-fill"],
-                                       styles={"nav-link": {"--hover-color": "#e5e5e6"}})
+                                     options=statistics_type,
+                                     icons=["house-fill", "calendar2-event", "diagram-3-fill",
+                                            "person-lines-fill"],
+                                     styles={"nav-link": {"--hover-color": "#e5e5e6"}})
 
         # ##### Select Favourite Team
         buli_teams = ['1. FC Köln', '1. FC Union Berlin', '1. FSV Mainz 05', 'Bayer 04 Leverkusen', 'Borussia Dortmund',
@@ -53,7 +110,8 @@ def main():
                       'FC Schalke 04', 'Hertha Berlin', 'RasenBallsport Leipzig', 'SV Werder Bremen',
                       'Sport-Club Freiburg', 'TSG 1899 Hoffenheim', 'VfB Stuttgart', 'VfL Bochum 1848', 'VfL Wolfsburg']
 
-        favourite_team = st.sidebar.selectbox("Select Favourite Team", buli_teams)
+        favourite_team = st.sidebar.selectbox(label="Select Favourite Team",
+                                              options=buli_teams)
 
     if event_analysis == 'Home':
         st.subheader("")
@@ -70,7 +128,19 @@ def main():
             * Event Level Data per Player
     """
     elif event_analysis == 'Game':
-        game_events(team=favourite_team)
+        # ##### Filter by Team and Match Day
+        info_df = info_query()
+        max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
+        match_day = st.sidebar.selectbox(label="Match Day",
+                                         options=[i for i in range(1, max_match_day + 1)])
+
+        # ##### Game Events Page
+        game_event_df = event_query(team=favourite_team, match_day=match_day)
+        info_players_df = players_info_query(team=favourite_team, match_day=match_day)
+        game_events(data=game_event_df,
+                    data_info=info_df,
+                    data_players=info_players_df,
+                    match_day=match_day)
 
     elif event_analysis == 'Team':
         team_events(team=favourite_team)
@@ -100,9 +170,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-    # @st.experimental_memo
-    # def run_query():
-    #     return supabase.table("game_events_stats").select("*").eq('Team', 'Borussia Dortmund').execute().data
