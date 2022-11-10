@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image
-from streamlit_option_menu import option_menu
-from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis
+from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis, game_passing_network
 
 
 def game_events(data, data_info, data_players, match_day):
@@ -56,7 +55,7 @@ def game_events(data, data_info, data_players, match_day):
             st.subheader("")
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - Starting <font color=#d20614>11</font>"
                         f"</h3>", unsafe_allow_html=True)
-        _, plot_col, _ = st.columns([2, 10, 2])
+        h_players_col, plot_col, a_players_col = st.columns([2, 10, 2])
 
         starting_11_plot = game_staring_11(data=data_players,
                                            game_teams=[home_team,
@@ -64,6 +63,23 @@ def game_events(data, data_info, data_players, match_day):
 
         with plot_col:
             st.pyplot(fig=starting_11_plot)
+        with h_players_col:
+            h_players = data_players[data_players['Team'] == home_team]
+            st.header("")
+            st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
+            for i in range(len(h_players)):
+                jersey_no = h_players.loc[i, 'Jersey No']
+                player_name = h_players.loc[i, 'Player Name']
+                st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>", unsafe_allow_html=True)
+
+        with a_players_col:
+            a_players = data_players[data_players['Team'] == away_team]
+            st.header("")
+            st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
+            for i in range(len(h_players)):
+                jersey_no = a_players.loc[i, 'Jersey No']
+                player_name = a_players.loc[i, 'Player Name']
+                st.markdown(f"<b>{jersey_no}<b> - <font color=#392864>{player_name}</font>", unsafe_allow_html=True)
 
     elif game_event_analysis == "Game Events":
 
@@ -168,7 +184,32 @@ def game_events(data, data_info, data_players, match_day):
                         f"{event_outcome}</b> <b>{event_analysis}</b> in <b>{period_insight[0][1]}</b> of the Game.",
                         unsafe_allow_html=True)
     elif game_event_analysis == "Passing Network":
-        pass
+        """ Minutes Filter """
+        st.sidebar.title("Event Options")
+        min_minute = df_game['Minute'].min()
+        max_minute = df_game['Minute'].max()
+        time_filter = st.sidebar.select_slider(label="Select Time Period",
+                                               options=[i for i in range(min_minute, max_minute + 1)],
+                                               value=(min_minute, max_minute))
+
+        final_pass_df = df_game[(df_game['Outcome'] == 'Successful') &
+                                (df_game['Minute'] >= time_filter[0]) &
+                                (df_game['Minute'] <= time_filter[1]) &
+                                (df_game['Event'] == "Pass")]
+
+        analysis_col, plot_col, legend_col = st.columns([4, 10, 2])
+        with legend_col:
+            network_team = st.selectbox(label='Select Team',
+                                        options=[home_team, away_team])
+
+        network_plot = game_passing_network(data=final_pass_df,
+                                            game_teams=[home_team,
+                                                        away_team],
+                                            starting_players=data_players,
+                                            plot_team=network_team)
+        with plot_col:
+            st.pyplot(fig=network_plot)
+
     elif game_event_analysis == "Passing Direction":
         pass
     else:

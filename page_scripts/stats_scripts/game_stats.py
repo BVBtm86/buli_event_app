@@ -1,17 +1,15 @@
 import pandas as pd
+import numpy as np
 from mplsoccer import Pitch
 import seaborn as sns
 import plotly.express as px
+from matplotlib.colors import to_rgba
 
 
 def game_staring_11(data, game_teams):
     """ Create Starting 11 Df """
     df_starting_11 = data.copy()
-    df_starting_11['First Name'] = df_starting_11['Player Name'].apply(lambda x: x.split()[0][0]) + ". "
-    df_starting_11['Last Name'] = df_starting_11['Player Name'].apply(lambda x: x.split()[1:])
-    df_starting_11['Last Name'] = df_starting_11['Last Name'].apply(lambda x: str(x).replace("[", "").
-                                                                    replace("]", "").replace(",", "").replace("'",""))
-    df_starting_11['Name'] = df_starting_11['First Name'] + df_starting_11['Last Name']
+    print(df_starting_11)
 
     """ Plot Events """
     team_colors = ["#d20614", "#392864"]
@@ -24,19 +22,22 @@ def game_staring_11(data, game_teams):
     ax = sns.scatterplot(data=df_starting_11,
                          x="X",
                          y="Y",
-                         s=200,
+                         s=500,
                          hue='Team',
                          alpha=0.75,
                          legend=False)
 
     text_plot = pd.concat({'x': df_starting_11['X'],
                                 'y': df_starting_11['Y'],
-                                'Name': df_starting_11['Name']}, axis=1)
+                                'no': df_starting_11['Jersey No']}, axis=1)
     for i, point in text_plot.iterrows():
-        ax.text(x=point['x'] - 2.5,
-                y=point['y'] - 5,
-                s=str(point['Name']),
-                color="#ffffff")
+        ax.text(x=point['x'],
+                y=point['y']-1,
+                s=str(point['no'].astype(int)),
+                ha='center',
+                color="#ffffff",
+                font={'weight': 'bold',
+                      'size': 10})
 
     return pitch_fig
 
@@ -197,5 +198,118 @@ def game_analysis(data, data_period, game_teams, plot_type, event_outcome, event
     return pitch_fig, position_fig, direction_fig, events_df, plot_heatmap, \
         position_insight, direction_insight, period_insight
 
-def game_passing_network(data, data_period, game_teams, plot_type, event_outcome, event_type):
-    pass
+
+def game_passing_network(data, game_teams, starting_players, plot_team):
+    """ Create Pass Df """
+    pass_df = data.copy()
+    starting_df = starting_players
+    starting_df['Team_Player'] = starting_df['Team'] + "_" + starting_df['Player Name']
+    final_df = pd.merge(left=pass_df,
+                        right=starting_df[['Team', 'Opponent', 'Player Name', 'Starting 11']],
+                        left_on=['Team', 'Opponent', 'Player Name'],
+                        right_on=['Team', 'Opponent', 'Player Name'],
+                        how='left')
+    final_df.dropna(subset=['Starting 11'], inplace=True)
+    final_df.drop(columns=['Starting 11'], inplace=True)
+    final_df['Team_Player'] = final_df['Team'] + "_" + final_df['Player Name Receiver']
+    final_df = pd.merge(left=final_df,
+                        right=starting_df[['Team_Player', 'Starting 11']],
+                        left_on=['Team_Player'],
+                        right_on=['Team_Player'],
+                        how='left')
+    final_df.dropna(subset=['Starting 11'], inplace=True)
+
+    """ Create Network Data """
+    final_df['Pass Pair'] = final_df['Player Name'] + " - " + final_df['Player Name Receiver']
+    home_passes = final_df[final_df['Team'] == game_teams[0]]
+    away_passes = final_df[final_df['Team'] == game_teams[1]]
+
+    home_pass_count = home_passes.groupby(['Pass Pair'])['Event'].count().reset_index()
+    away_pass_count = away_passes.groupby(['Pass Pair'])['Event'].count().reset_index()
+
+    avg_home_pos = home_passes.groupby(['Player Name'])[['Start X', 'Start Y']].mean().reset_index()
+    avg_away_pos = away_passes.groupby(['Player Name'])[['Start X', 'Start Y']].mean().reset_index()
+
+    ''' Final Home Data '''
+    final_home_passes = home_passes[['Player Name', 'Player Name Receiver', 'Pass Pair']]
+    final_home_passes = pd.merge(left=final_home_passes,
+                                 right=home_pass_count,
+                                 left_on='Pass Pair',
+                                 right_on='Pass Pair',
+                                 how='left')
+    final_home_passes = pd.merge(left=final_home_passes,
+                                 right=avg_home_pos,
+                                 left_on=['Player Name'],
+                                 right_on=['Player Name'],
+                                 how='left')
+    avg_home_pos.rename(columns={'Player Name': 'Player Name Receiver'}, inplace=True)
+    final_home_passes = pd.merge(left=final_home_passes,
+                                 right=avg_home_pos,
+                                 left_on=['Player Name Receiver'],
+                                 right_on=['Player Name Receiver'],
+                                 how='left')
+    final_home_passes.rename(columns={'Start X_x': 'Start X', 'Start Y_x': 'Start Y',
+                                      'Start X_y': 'End X', 'Start Y_y': 'End Y'}, inplace=True)
+    final_home_passes = final_home_passes.sort_values(by='Player Name')
+
+    ''' Final Away Data '''
+    final_away_passes = away_passes[['Player Name', 'Player Name Receiver', 'Pass Pair']]
+    final_away_passes = pd.merge(left=final_away_passes,
+                                 right=away_pass_count,
+                                 left_on='Pass Pair',
+                                 right_on='Pass Pair',
+                                 how='left')
+    final_away_passes = pd.merge(left=final_away_passes,
+                                 right=avg_away_pos,
+                                 left_on=['Player Name'],
+                                 right_on=['Player Name'],
+                                 how='left')
+    avg_away_pos.rename(columns={'Player Name': 'Player Name Receiver'}, inplace=True)
+    final_away_passes = pd.merge(left=final_away_passes,
+                                 right=avg_away_pos,
+                                 left_on=['Player Name Receiver'],
+                                 right_on=['Player Name Receiver'],
+                                 how='left')
+    final_away_passes.rename(columns={'Start X_x': 'Start X', 'Start Y_x': 'Start Y',
+                                      'Start X_y': 'End X', 'Start Y_y': 'End Y'}, inplace=True)
+    final_away_passes = final_away_passes.sort_values(by='Player Name')
+
+    """ Plot Network Data """
+    if plot_team == game_teams[0]:
+        final_network_df = final_home_passes.copy()
+    else:
+        final_network_df = final_away_passes.copy()
+
+    final_network_df['First Name'] = final_network_df['Player Name'].apply(lambda x: x.split()[0][0]) + ". "
+    final_network_df['Last Name'] = final_network_df['Player Name'].apply(lambda x: x.split()[1:])
+    final_network_df['Last Name'] = final_network_df['Last Name'].apply(lambda x: str(x).replace("[", "").
+                                                                        replace("]", "").replace(",", "").
+                                                                        replace("'", ""))
+    final_network_df['Name'] = final_network_df['First Name'] + final_network_df['Last Name']
+
+    max_line_width = 20
+    max_marker_size = 3000
+    final_network_df['Pass Width'] = (final_away_passes['Event'] / final_away_passes['Event'].max() * max_line_width)
+
+    min_transparency = 0.3
+    color = np.array(to_rgba('white'))
+    c_transparency = final_network_df['Event'] / final_network_df['Event'].max()
+    c_transparency = (c_transparency * (1 - min_transparency)) + min_transparency
+    # color[:, 3] = c_transparency
+    print(c_transparency)
+
+    pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
+    pitch_fig, pitch_ax = pitch.grid(title_height=0.01,axis=False, )
+
+    pass_lines = pitch.lines(final_network_df['Start X'], final_network_df['Start Y'],
+                             final_network_df['End X'], final_network_df['End Y'], lw=final_network_df['Pass Width'],
+                             color=color, zorder=10, ax=pitch_ax['pitch'])
+
+    pass_nodes = pitch.scatter(final_network_df['Start X'], final_network_df['Start Y'],
+                               color='#d20614', edgecolors='black', linewidth=0.1, alpha=0.5, ax=pitch_ax['pitch'],
+                               s=200)
+    for index, row in final_network_df.iterrows():
+        pitch.annotate(row['Name'], xy=(row['Start X'] - 1, row['Start Y'] - 3), c='white', va='center',
+                       ha='center', size=10, ax=pitch_ax['pitch'])
+
+    return pitch_fig
