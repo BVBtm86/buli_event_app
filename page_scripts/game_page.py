@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
-from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis, game_passing_network
+from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis, \
+    game_passing_network, game_passing_direction
 
 
 def game_events(data, data_info, data_players, match_day):
@@ -90,6 +91,7 @@ def game_events(data, data_info, data_players, match_day):
                 else:
                     st.markdown(f"<b>{jersey_no}<b> - <font color=#392864>{player_name}</font>",
                                 unsafe_allow_html=True)
+        st.sidebar.header(" ")
 
     elif game_event_analysis == "Game Events":
 
@@ -261,6 +263,50 @@ def game_events(data, data_info, data_players, match_day):
 
         st.sidebar.header(" ")
     elif game_event_analysis == "Passing Direction":
-        pass
+        with tab_col:
+            st.subheader("")
+            st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
+                        f"Passing Direction</font></h3>", unsafe_allow_html=True)
+
+        """ Minutes Filter """
+        st.sidebar.header("Event Options")
+        min_minute = df_game['Minute'].min()
+        max_minute = df_game['Minute'].max()
+        time_filter = st.sidebar.select_slider(label="Select Time Period",
+                                               options=[i for i in range(min_minute, max_minute + 1)],
+                                               value=(min_minute, max_minute))
+
+        """ Final Df """
+        final_pass_df = df_game[(df_game['Minute'] >= time_filter[0]) &
+                                (df_game['Minute'] <= time_filter[1]) &
+                                (df_game['Event'] == "Pass")]
+
+        analysis_col, plot_col, legend_col = st.columns([4, 10, 2])
+
+        with legend_col:
+            """ Team Selection """
+            passing_team = st.selectbox(label='Select Team',
+                                        options=[home_team, away_team])
+
+            """ Pass Length """
+            passing_length = st.selectbox(label="Length of Passes",
+                                          options=['All', "Short Pass", "Medium Pass", "Long Pass"])
+        passes_plot = game_passing_direction(data=final_pass_df,
+                                             plot_team=passing_team,
+                                             pass_length=passing_length)
+
+        with plot_col:
+            st.pyplot(fig=passes_plot)
+
+        with legend_col:
+            st.markdown("<h4>Legend</h4>", unsafe_allow_html=True)
+            st.markdown(f"<font color=#d20614>-> <b>Successful</b></font> Passes", unsafe_allow_html=True)
+            st.markdown(f"<font color=#392864>-> <b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
+            st.markdown(f"<font color=#d20614><b>Short</b></font> Pass = <b>0</b> - <b>10</b> meters",
+                        unsafe_allow_html=True)
+            st.markdown(f"<font color=#d20614><b>Medium</b></font> Pass = <b>11</b> - <b>25</b> meters",
+                        unsafe_allow_html=True)
+            st.markdown(f"<font color=#d20614><b>Long</b></font> Pass = <b>25+</b> meters", unsafe_allow_html=True)
+        st.sidebar.header(" ")
     else:
         pass

@@ -1,9 +1,15 @@
-import pandas as pd
 import numpy as np
-from mplsoccer import Pitch
-import seaborn as sns
+import pandas as pd
 import plotly.express as px
+import seaborn as sns
 from matplotlib.colors import to_rgba
+from mplsoccer import Pitch
+import math
+
+
+def calculate_distance(x_start, y_start, x_end, y_end):
+    pass_distance = math.sqrt((x_end * 1.05 - x_start * 1.05) ** 2 + (y_end * 0.68 - y_start * 0.68) ** 2)
+    return pass_distance
 
 
 def game_staring_11(data, game_teams):
@@ -245,7 +251,7 @@ def game_passing_network(data, starting_players, plot_team):
 
     """ Plot Network Data """
     max_line_width = 10
-    max_marker_size = 2500
+    max_marker_size = 2000
     network_df['Pass Width'] = (network_df['Event'] / network_df['Event'].max() * max_line_width)
     avg_df['Size'] = (avg_df['No Passes'] / avg_df['No Passes'].max() * max_marker_size)
 
@@ -257,24 +263,24 @@ def game_passing_network(data, starting_players, plot_team):
     color[:, 3] = c_transparency
 
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
-    pitch_fig, ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
     if pass_df.shape[0] > 1:
         pass_lines = pitch.lines(network_df['Start X'], network_df['Start Y'],
                                  network_df['End X'], network_df['End Y'],
                                  lw=network_df['Pass Width'],
                                  color=color,
                                  zorder=1,
-                                 ax=ax)
+                                 ax=ax_pitch)
         pass_nodes = pitch.scatter(avg_df['Start X'], avg_df['Start Y'],
                                    s=avg_df['Size'],
                                    color='#d20614',
                                    edgecolors='black',
                                    linewidth=1,
                                    alpha=0.5,
-                                   ax=ax)
+                                   ax=ax_pitch)
         for index, row in avg_df.iterrows():
-            pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='white', va='center',
-                           ha='center', size=16, weight='bold', ax=ax)
+            pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff', va='center',
+                           ha='center', size=16, weight='bold', ax=ax_pitch)
 
     """ Analysis Network Data """
     top_passes_df = network_df.nlargest(10, 'Event')
@@ -330,3 +336,48 @@ def game_passing_network(data, starting_players, plot_team):
         top_most = [None, None, None]
 
     return pitch_fig, top_fig, all_most, top_most
+
+
+def game_passing_direction(data, plot_team, pass_length):
+    """ Create Pass Df """
+    pass_df = data.copy()
+    pass_df = pass_df[pass_df['Team'] == plot_team].reset_index(drop=True)
+    pass_df['Distance'] = \
+        pass_df.apply(lambda x: calculate_distance(x['Start X'], x['Start Y'], x['End X'], x['End Y']), axis=1)
+    pass_df['Distance Size'] = pass_df['Distance'].apply(lambda x: 'Short Pass' if x <= 10 else (
+        'Medium Pass' if 10 < x <= 25 else 'Long Pass'))
+
+    if pass_length != "All":
+        pass_successful = pass_df[(pass_df['Outcome'] == "Successful") &
+                                          (pass_df['Distance Size'] == pass_length)].reset_index(drop=True)
+        pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful") &
+                                          (pass_df['Distance Size'] == pass_length)].reset_index(drop=True)
+    else:
+        pass_successful = pass_df[(pass_df['Outcome'] == "Successful")].reset_index(drop=True)
+        pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
+
+    """ Plot Passing Data """
+    pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
+    pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+
+    """ Plot the Successful Passes """
+    pitch.arrows(pass_successful['Start X'], pass_successful['Start Y'],
+                 pass_successful['End X'], pass_successful['End Y'],
+                 width=2,
+                 headwidth=10,
+                 headlength=10,
+                 color='#d20614',
+                 alpha=0.75,
+                 ax=pitch_ax)
+
+    """ Plot the Unsuccessful Passes """
+    pitch.arrows(pass_unsuccessful['Start X'], pass_unsuccessful['Start Y'],
+                 pass_unsuccessful['End X'], pass_unsuccessful['End Y'],
+                 width=1,
+                 headwidth=10,
+                 headlength=10,
+                 color='#392864',
+                 alpha=0.75,
+                 ax=pitch_ax)
+
+    return pitch_fig
