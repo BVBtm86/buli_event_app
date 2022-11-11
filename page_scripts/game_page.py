@@ -70,7 +70,12 @@ def game_events(data, data_info, data_players, match_day):
             for i in range(len(h_players)):
                 jersey_no = h_players.loc[i, 'Jersey No']
                 player_name = h_players.loc[i, 'Player Name']
-                st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>", unsafe_allow_html=True)
+                if jersey_no < 10:
+                    st.markdown(f"<b>0{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                unsafe_allow_html=True)
 
         with a_players_col:
             a_players = data_players[data_players['Team'] == away_team]
@@ -79,12 +84,17 @@ def game_events(data, data_info, data_players, match_day):
             for i in range(len(h_players)):
                 jersey_no = a_players.loc[i, 'Jersey No']
                 player_name = a_players.loc[i, 'Player Name']
-                st.markdown(f"<b>{jersey_no}<b> - <font color=#392864>{player_name}</font>", unsafe_allow_html=True)
+                if jersey_no < 10:
+                    st.markdown(f"<b>0{jersey_no}<b> - <font color=#392864>{player_name}</font>",
+                                unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<b>{jersey_no}<b> - <font color=#392864>{player_name}</font>",
+                                unsafe_allow_html=True)
 
     elif game_event_analysis == "Game Events":
 
         """ Minutes Filter """
-        st.sidebar.title("Event Options")
+        st.sidebar.header("Event Options")
         min_minute = df_game['Minute'].min()
         max_minute = df_game['Minute'].max()
         time_filter = st.sidebar.select_slider(label="Select Time Period",
@@ -127,6 +137,7 @@ def game_events(data, data_info, data_players, match_day):
         no_home_events = df_game[df_game['Venue'] == 'Home'].shape[0]
         no_away_events = df_game[df_game['Venue'] == 'Away'].shape[0]
         no_total_events = [no_home_events, no_away_events]
+
         event_plot, position_plot, direction_plot, events_data, valid_heatmap, \
             position_insight, direction_insight, period_insight = game_analysis(data=final_event_df,
                                                                                 data_period=final_period_df,
@@ -183,9 +194,16 @@ def game_events(data, data_info, data_players, match_day):
                         f"{period_insight[1][1]:.2%}</font></b> <b>"
                         f"{event_outcome}</b> <b>{event_analysis}</b> in <b>{period_insight[0][1]}</b> of the Game.",
                         unsafe_allow_html=True)
+
+            st.sidebar.header(" ")
     elif game_event_analysis == "Passing Network":
+        with tab_col:
+            st.subheader("")
+            st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
+                        f"Passing Network</font></h3>", unsafe_allow_html=True)
+
         """ Minutes Filter """
-        st.sidebar.title("Event Options")
+        st.sidebar.header("Event Options")
         min_minute = df_game['Minute'].min()
         max_minute = df_game['Minute'].max()
         time_filter = st.sidebar.select_slider(label="Select Time Period",
@@ -202,14 +220,46 @@ def game_events(data, data_info, data_players, match_day):
             network_team = st.selectbox(label='Select Team',
                                         options=[home_team, away_team])
 
-        network_plot = game_passing_network(data=final_pass_df,
-                                            game_teams=[home_team,
-                                                        away_team],
-                                            starting_players=data_players,
-                                            plot_team=network_team)
+            legend_players = data_players[data_players['Team'] == network_team]
+            st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+            for i in range(len(legend_players)):
+                jersey_no = legend_players.loc[i, 'Jersey No']
+                player_name = legend_players.loc[i, 'Player Name']
+                if jersey_no < 10:
+                    st.markdown(f"<b>0{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                unsafe_allow_html=True)
+
+        network_plot, top_plot, starting_insights, top_insights = game_passing_network(data=final_pass_df,
+                                                                                       starting_players=data_players,
+                                                                                       plot_team=network_team)
         with plot_col:
             st.pyplot(fig=network_plot)
 
+        with analysis_col:
+            if top_plot is None:
+                st.markdown("")
+                st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the "
+                            f"Starting 11 Players of <b>{network_team}</b>, there were less then <b>"
+                            f"<font color=#d20614>2</font></b> Successfull Passes.", unsafe_allow_html=True)
+            else:
+                st.plotly_chart(top_plot, config=config, use_container_width=True)
+
+                st.markdown(
+                    f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Starting "
+                    f"11 Players of <b>{network_team}</b>, <b><font color=#d20614>{starting_insights[0]}</font></b>"
+                    f" was involved in most of the <b>Passes</b> with <b><font color=#d20614>"
+                    f"{int(starting_insights[1])}</font></b>.", unsafe_allow_html=True)
+                st.markdown(
+                    f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Top "
+                    f"<b>{top_insights[0]}</b> Successful Passes between Players of <b>{network_team}</b>, we see that "
+                    f"<b><font color=#d20614>{top_insights[1]}</font></b> was involved in most of them with <b>"
+                    f"<font color=#d20614>{int(top_insights[2])}</font></b> out of <b><font color=#d20614>"
+                    f"{top_insights[0]}</font></b>  Successful Passes between Players.", unsafe_allow_html=True)
+
+        st.sidebar.header(" ")
     elif game_event_analysis == "Passing Direction":
         pass
     else:
