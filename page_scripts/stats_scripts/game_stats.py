@@ -6,6 +6,8 @@ from matplotlib.colors import to_rgba
 from mplsoccer import Pitch
 import math
 
+team_colors = ["#d20614", "#392864"]
+
 
 def calculate_distance(x_start, y_start, x_end, y_end):
     pass_distance = math.sqrt((x_end * 1.05 - x_start * 1.05) ** 2 + (y_end * 0.68 - y_start * 0.68) ** 2)
@@ -17,7 +19,6 @@ def game_staring_11(data, game_teams):
     df_starting_11 = data.copy()
 
     """ Plot Events """
-    team_colors = ["#d20614", "#392864"]
     sns.set_palette(sns.color_palette(team_colors))
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(10, 10))
@@ -47,13 +48,12 @@ def game_staring_11(data, game_teams):
     return pitch_fig
 
 
-def game_analysis(data, data_period, game_teams, plot_type, event_outcome, event_type, heat_team, no_events):
+def game_analysis(data, data_period, game_teams, plot_type, event_type, event_outcome, heat_team, no_events):
     """ Create Event Df """
     event_df = data.copy()
     period_df = data_period.copy()
 
     """ Plot Events """
-    team_colors = ["#d20614", "#392864"]
     sns.set_palette(sns.color_palette(team_colors))
 
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
@@ -125,7 +125,7 @@ def game_analysis(data, data_period, game_teams, plot_type, event_outcome, event
                           color='Team',
                           color_discrete_map={game_teams[0]: team_colors[0],
                                               game_teams[1]: team_colors[1]},
-                          height=450,
+                          height=350,
                           barmode='group',
                           title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
                           hover_data={'%': ':.2%'})
@@ -140,7 +140,7 @@ def game_analysis(data, data_period, game_teams, plot_type, event_outcome, event
                            color='Team',
                            color_discrete_map={game_teams[0]: team_colors[0],
                                                game_teams[1]: team_colors[1]},
-                           height=450,
+                           height=350,
                            barmode='group',
                            title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
                            hover_data={'%': ':.2%'})
@@ -161,9 +161,9 @@ def game_analysis(data, data_period, game_teams, plot_type, event_outcome, event
 
     """ Analysis Insights """
     if home_stats.shape[0]:
-        home_position_name = f"the {home_stats['Position'].value_counts(normalize=True).index[0]}"
+        home_position_name = f"{home_stats['Position'].value_counts(normalize=True).index[0]}"
         home_position_count = home_stats['Position'].value_counts(normalize=True).values[0]
-        home_direction_name = f"the {home_stats['Direction'].value_counts(normalize=True).index[0]}"
+        home_direction_name = f"{home_stats['Direction'].value_counts(normalize=True).index[0]}"
         home_direction_count = home_stats['Direction'].value_counts(normalize=True).values[0]
     else:
         home_position_name = "Any Position"
@@ -265,19 +265,19 @@ def game_passing_network(data, starting_players, plot_team):
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
     if pass_df.shape[0] > 1:
-        pass_lines = pitch.lines(network_df['Start X'], network_df['Start Y'],
-                                 network_df['End X'], network_df['End Y'],
-                                 lw=network_df['Pass Width'],
-                                 color=color,
-                                 zorder=1,
-                                 ax=ax_pitch)
-        pass_nodes = pitch.scatter(avg_df['Start X'], avg_df['Start Y'],
-                                   s=avg_df['Size'],
-                                   color='#d20614',
-                                   edgecolors='black',
-                                   linewidth=1,
-                                   alpha=0.5,
-                                   ax=ax_pitch)
+        pitch.lines(network_df['Start X'], network_df['Start Y'],
+                    network_df['End X'], network_df['End Y'],
+                    lw=network_df['Pass Width'],
+                    color=color,
+                    zorder=1,
+                    ax=ax_pitch)
+        pitch.scatter(avg_df['Start X'], avg_df['Start Y'],
+                      s=avg_df['Size'],
+                      color='#d20614',
+                      edgecolors='black',
+                      linewidth=1,
+                      alpha=0.5,
+                      ax=ax_pitch)
         for index, row in avg_df.iterrows():
             pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff', va='center',
                            ha='center', size=16, weight='bold', ax=ax_pitch)
@@ -342,16 +342,20 @@ def game_passing_direction(data, plot_team, pass_length):
     """ Create Pass Df """
     pass_df = data.copy()
     pass_df = pass_df[pass_df['Team'] == plot_team].reset_index(drop=True)
-    pass_df['Distance'] = \
-        pass_df.apply(lambda x: calculate_distance(x['Start X'], x['Start Y'], x['End X'], x['End Y']), axis=1)
-    pass_df['Distance Size'] = pass_df['Distance'].apply(lambda x: 'Short Pass' if x <= 10 else (
-        'Medium Pass' if 10 < x <= 25 else 'Long Pass'))
+    if pass_df.shape[0] > 0:
+        pass_df['Distance'] = \
+            pass_df.apply(lambda x: calculate_distance(x['Start X'], x['Start Y'], x['End X'], x['End Y']), axis=1)
+        pass_df['Distance Length'] = pass_df['Distance'].apply(lambda x: 'Short Passes' if x <= 10 else (
+            'Medium Passes' if 10 < x <= 25 else 'Long Passes'))
+        pass_df['Direction'] = pass_df['End X'] - pass_df['Start X']
+        pass_df['Direction Type'] = \
+            pass_df['Direction'].apply(lambda x: "Forward Passes" if x > 0 else "Backward Passes")
 
     if pass_length != "All":
         pass_successful = pass_df[(pass_df['Outcome'] == "Successful") &
-                                          (pass_df['Distance Size'] == pass_length)].reset_index(drop=True)
+                                  (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
         pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful") &
-                                          (pass_df['Distance Size'] == pass_length)].reset_index(drop=True)
+                                    (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
     else:
         pass_successful = pass_df[(pass_df['Outcome'] == "Successful")].reset_index(drop=True)
         pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
@@ -380,4 +384,111 @@ def game_passing_direction(data, plot_team, pass_length):
                  alpha=0.75,
                  ax=pitch_ax)
 
-    return pitch_fig
+    """ Direction Insights """
+    if pass_df.shape[0] > 0:
+        pass_outcome_count = pd.DataFrame(pass_df['Outcome'].value_counts())
+        pass_outcome_perc = pd.DataFrame(pass_df['Outcome'].value_counts(normalize=True))
+        pass_outcome = pd.concat([pass_outcome_count, pass_outcome_perc], axis=1)
+        pass_outcome.columns = ['No of Events', '% of Events']
+
+        pass_length = pd.DataFrame(pass_df.groupby("Outcome")['Distance Length'].value_counts(normalize=True))
+        pass_length.columns = ['%']
+        pass_length.reset_index(inplace=True)
+        pass_direction = pd.DataFrame(pass_df.groupby("Outcome")['Direction Type'].value_counts(normalize=True))
+        pass_direction.columns = ['%']
+        pass_direction.reset_index(inplace=True)
+
+        """ Length Plot """
+        length_fig = px.bar(pass_length,
+                            x='Distance Length',
+                            y='%',
+                            color='Outcome',
+                            color_discrete_map={"Successful": team_colors[0],
+                                                "Unsuccessful": team_colors[1]},
+                            height=350,
+                            barmode='group',
+                            title=f"Length of Passes by Outcome",
+                            hover_data={'%': ':.2%'})
+        length_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        length_fig.layout.yaxis.tickformat = ',.0%'
+
+        """ Direction Plot """
+        direction_fig = px.bar(pass_direction,
+                               x='Direction Type',
+                               y='%',
+                               color='Outcome',
+                               color_discrete_map={"Successful": team_colors[0],
+                                                   "Unsuccessful": team_colors[1]},
+                               height=350,
+                               barmode='group',
+                               title=f"Direction of Passes by Outcome",
+                               hover_data={'%': ':.2%'})
+        direction_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        direction_fig.layout.yaxis.tickformat = ',.0%'
+
+        if 'Successful' in pass_outcome.index:
+            successful_insight = [pass_length[pass_length['Outcome'] == "Successful"]['Distance Length'].values[0],
+                                  pass_direction[pass_direction['Outcome'] == "Successful"]['Direction Type'].values[0]]
+        else:
+            successful_insight = None
+        if 'Unsuccessful' in pass_outcome.index:
+            unsuccessful_insight = [pass_length[pass_length['Outcome'] == "Unsuccessful"]['Distance Length'].values[0],
+                                    pass_direction[pass_direction['Outcome'] == "Unsuccessful"][
+                                        'Direction Type'].values[0]]
+        else:
+            unsuccessful_insight = None
+    else:
+        pass_outcome = None
+        length_fig = None
+        direction_fig = None
+        successful_insight = None
+        unsuccessful_insight = None
+
+    return pitch_fig, pass_outcome, length_fig, direction_fig, successful_insight, unsuccessful_insight
+
+
+def game_event_sequence(data, event_filter, team_plot, type_plot, event_teams):
+    """ Create Sequence Df """
+    sequence_df = data.copy()
+    sequence_df = sequence_df.sort_values(by=['Minute', 'Second'])
+    final_df = sequence_df.iloc[:event_filter, :].reset_index(drop=True)
+    if type_plot == "Heatmap":
+        final_df = final_df[final_df['Team'] == team_plot].reset_index(drop=True)
+    pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
+    pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+
+    current_game_minute = final_df['Minute'].max()
+    """ Plot Events """
+    if type_plot == "Position":
+        sns.scatterplot(data=final_df,
+                        x="Start X",
+                        y="Start Y",
+                        s=250,
+                        hue='Team',
+                        palette={event_teams[0]: team_colors[0],
+                                 event_teams[1]: team_colors[1]},
+                        alpha=0.75,
+                        legend=False)
+    else:
+        if final_df.shape[0] < 5:
+            sns.scatterplot(data=final_df,
+                            x="Start X",
+                            y="Start Y",
+                            s=250,
+                            hue='Team',
+                            alpha=0.75,
+                            legend=False)
+        else:
+            sns.kdeplot(x=final_df['Start X'],
+                        y=final_df['Start Y'],
+                        shade=True,
+                        shade_lowest=False,
+                        alpha=0.25,
+                        n_levels=10,
+                        cmap='plasma')
+
+    return pitch_fig, current_game_minute

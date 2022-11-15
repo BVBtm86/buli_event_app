@@ -61,13 +61,13 @@ def event_query(team, match_day):
 
     if game_team_df['Venue'].unique()[0] == 'Away':
         game_team_df['Start X'] = np.abs(game_team_df['Start X'] - 100)
-        game_team_df['End X'] = np.abs(game_team_df['Start X'] - 100)
+        game_team_df['End X'] = np.abs(game_team_df['End X'] - 100)
         game_team_df['Start Y'] = np.abs(game_team_df['Start Y'] - 100)
         game_team_df['End Y'] = np.abs(game_team_df['End Y'] - 100)
 
     if game_opp_df['Venue'].unique()[0] == 'Away':
         game_opp_df['Start X'] = np.abs(game_opp_df['Start X'] - 100)
-        game_opp_df['End X'] = np.abs(game_opp_df['Start X'] - 100)
+        game_opp_df['End X'] = np.abs(game_opp_df['End X'] - 100)
         game_opp_df['Start Y'] = np.abs(game_opp_df['Start Y'] - 100)
         game_opp_df['End Y'] = np.abs(game_opp_df['End Y'] - 100)
 
