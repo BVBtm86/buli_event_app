@@ -111,7 +111,8 @@ def main():
                       'Sport-Club Freiburg', 'TSG 1899 Hoffenheim', 'VfB Stuttgart', 'VfL Bochum 1848', 'VfL Wolfsburg']
 
         favourite_team = st.sidebar.selectbox(label="Select Favourite Team",
-                                              options=buli_teams)
+                                              options=buli_teams,
+                                              index=buli_teams.index("Borussia Dortmund"))
 
     if event_analysis == 'Home':
         st.subheader("")
@@ -132,7 +133,8 @@ def main():
         info_df = info_query()
         max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
         match_day = st.sidebar.selectbox(label="Match Day",
-                                         options=[i for i in range(1, max_match_day + 1)])
+                                         options=[i for i in range(1, max_match_day + 1)],
+                                         index=int(max_match_day) - 1)
 
         # ##### Game Events Page
         game_event_df = event_query(team=favourite_team, match_day=match_day)

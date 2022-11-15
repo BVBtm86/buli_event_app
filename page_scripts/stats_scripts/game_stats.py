@@ -5,6 +5,8 @@ import seaborn as sns
 from matplotlib.colors import to_rgba
 from mplsoccer import Pitch
 import math
+import matplotlib.pyplot as plt
+plt.rcParams.update({'figure.max_open_warning': 0})
 
 team_colors = ["#d20614", "#392864"]
 
@@ -19,7 +21,6 @@ def game_staring_11(data, game_teams):
     df_starting_11 = data.copy()
 
     """ Plot Events """
-    sns.set_palette(sns.color_palette(team_colors))
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(10, 10))
 
@@ -28,8 +29,10 @@ def game_staring_11(data, game_teams):
     ax = sns.scatterplot(data=df_starting_11,
                          x="X",
                          y="Y",
-                         s=500,
+                         s=250,
                          hue='Team',
+                         palette={game_teams[0]: team_colors[0],
+                                  game_teams[1]: team_colors[1]},
                          alpha=0.75,
                          legend=False)
 
@@ -52,36 +55,34 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
     """ Create Event Df """
     event_df = data.copy()
     period_df = data_period.copy()
+    if plot_type == "Heatmap":
+        final_df = event_df[event_df['Team'] == heat_team].reset_index(drop=True)
+    else:
+        final_df = event_df.copy()
 
     """ Plot Events """
-    sns.set_palette(sns.color_palette(team_colors))
-
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(10, 10))
-    event_df = event_df.sort_values(by=['Venue'], ascending=False)
+
     if plot_type == "Position":
-        sns.scatterplot(data=event_df,
+        sns.scatterplot(data=final_df,
                         x="Start X",
                         y="Start Y",
                         s=75,
                         hue='Team',
+                        palette={game_teams[0]: team_colors[0],
+                                 game_teams[1]: team_colors[1]},
                         alpha=0.75,
                         legend=False)
         plot_heatmap = True
     else:
-        heat_df = event_df.copy()
-        heat_df = heat_df[heat_df['Team'] == heat_team].reset_index(drop=True)
-        if heat_df.shape[0] >= 5:
-            if heat_df.shape[0] < 10:
-                level_plot = heat_df.shape[0]
-            else:
-                level_plot = 10
-            sns.kdeplot(x=heat_df['Start X'],
-                        y=heat_df['Start Y'],
+        if final_df.shape[0] >= 5:
+            sns.kdeplot(x=final_df['Start X'],
+                        y=final_df['Start Y'],
                         shade=True,
                         shade_lowest=False,
                         alpha=0.25,
-                        n_levels=level_plot,
+                        n_levels=10,
                         cmap='plasma')
             plot_heatmap = True
         else:
@@ -161,9 +162,9 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
 
     """ Analysis Insights """
     if home_stats.shape[0]:
-        home_position_name = f"{home_stats['Position'].value_counts(normalize=True).index[0]}"
+        home_position_name = f"the {home_stats['Position'].value_counts(normalize=True).index[0]}"
         home_position_count = home_stats['Position'].value_counts(normalize=True).values[0]
-        home_direction_name = f"{home_stats['Direction'].value_counts(normalize=True).index[0]}"
+        home_direction_name = f"the {home_stats['Direction'].value_counts(normalize=True).index[0]}"
         home_direction_count = home_stats['Direction'].value_counts(normalize=True).values[0]
     else:
         home_position_name = "Any Position"
@@ -171,9 +172,9 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
         home_direction_name = "Any Direction"
         home_direction_count = 0
     if away_stats.shape[0]:
-        away_position_name = f"{away_stats['Position'].value_counts(normalize=True).index[0]}"
+        away_position_name = f"the {away_stats['Position'].value_counts(normalize=True).index[0]}"
         away_position_count = away_stats['Position'].value_counts(normalize=True).values[0]
-        away_direction_name = f"{away_stats['Direction'].value_counts(normalize=True).index[0]}"
+        away_direction_name = f"the {away_stats['Direction'].value_counts(normalize=True).index[0]}"
         away_direction_count = away_stats['Direction'].value_counts(normalize=True).values[0]
     else:
         away_position_name = "Any Position"
@@ -451,44 +452,55 @@ def game_passing_direction(data, plot_team, pass_length):
     return pitch_fig, pass_outcome, length_fig, direction_fig, successful_insight, unsuccessful_insight
 
 
-def game_event_sequence(data, event_filter, team_plot, type_plot, event_teams):
+def game_event_sequence(data, event_time, team_plot, type_plot, event_teams, event_type):
     """ Create Sequence Df """
-    sequence_df = data.copy()
-    sequence_df = sequence_df.sort_values(by=['Minute', 'Second'])
-    final_df = sequence_df.iloc[:event_filter, :].reset_index(drop=True)
+    final_df = data.copy()
+    sequence_df = final_df.sort_values(by=['Minute', 'Second']).reset_index(drop=True)
     if type_plot == "Heatmap":
-        final_df = final_df[final_df['Team'] == team_plot].reset_index(drop=True)
+        sequence_df = sequence_df[sequence_df['Team'] == team_plot].reset_index(drop=True)
+
+    if event_type == "Passes":
+        sequence_df = sequence_df[sequence_df['Minute'] <= event_time].reset_index(drop=True)
+    else:
+        sequence_df = sequence_df.iloc[:event_time + 1, :]
+
+    plt.clf()
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
 
-    current_game_minute = final_df['Minute'].max()
-    """ Plot Events """
-    if type_plot == "Position":
-        sns.scatterplot(data=final_df,
-                        x="Start X",
-                        y="Start Y",
-                        s=250,
-                        hue='Team',
-                        palette={event_teams[0]: team_colors[0],
-                                 event_teams[1]: team_colors[1]},
-                        alpha=0.75,
-                        legend=False)
-    else:
-        if final_df.shape[0] < 5:
-            sns.scatterplot(data=final_df,
+    current_game_minute = sequence_df['Minute'].max()
+    if sequence_df.shape[0] > 0:
+        """ Plot Events """
+        if type_plot == "Position":
+            sns.scatterplot(data=sequence_df,
                             x="Start X",
                             y="Start Y",
                             s=250,
                             hue='Team',
+                            palette={event_teams[0]: team_colors[0],
+                                     event_teams[1]: team_colors[1]},
                             alpha=0.75,
                             legend=False)
         else:
-            sns.kdeplot(x=final_df['Start X'],
-                        y=final_df['Start Y'],
-                        shade=True,
-                        shade_lowest=False,
-                        alpha=0.25,
-                        n_levels=10,
-                        cmap='plasma')
+            if sequence_df.shape[0] < 5:
+                sns.scatterplot(data=sequence_df,
+                                x="Start X",
+                                y="Start Y",
+                                s=250,
+                                hue='Team',
+                                palette={event_teams[0]: team_colors[0],
+                                         event_teams[1]: team_colors[1]},
+                                alpha=0.75,
+                                legend=False)
+            else:
+                sns.kdeplot(x=sequence_df['Start X'],
+                            y=sequence_df['Start Y'],
+                            shade=True,
+                            shade_lowest=False,
+                            alpha=0.25,
+                            n_levels=10,
+                            cmap='plasma')
+    else:
+        pitch_fig = None
 
     return pitch_fig, current_game_minute

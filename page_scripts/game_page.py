@@ -18,7 +18,8 @@ def game_events(data, data_info, data_players, match_day):
 
     # ##### Event Analysis Options
     st.sidebar.header("Analysis Options")
-    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Direction", "Event Sequence"]
+    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Direction", "Event Sequence",
+                       "Passing Sequence"]
     event_analysis = st.sidebar.selectbox("Select Analysis", game_event_menu)
 
     """ Create Game Df """
@@ -251,13 +252,13 @@ def game_events(data, data_info, data_players, match_day):
             st.subheader("")
             st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                         f"#d20614>{home_team}</font></b> had <b><font color=#d20614>{position_insight[1][0]:.2%}</font>"
-                        f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in the <b>{position_insight[0][0]}"
-                        f"</b> of the Pitch and <b><font color=#d20614>{direction_insight[1][0]:.2%}</font></b> in the"
+                        f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_insight[0][0]}"
+                        f"</b> of the Pitch and <b><font color=#d20614>{direction_insight[1][0]:.2%}</font></b> in "
                         f" <b>{direction_insight[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
             st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                         f"#392864>{away_team}</font></b> had <b><font color=#392864>{position_insight[1][1]:.2%}</font>"
-                        f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in the <b>{position_insight[0][1]}"
-                        f"</b> of the Pitch and <b><font color=#392864>{direction_insight[1][1]:.2%}</font></b> in the "
+                        f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_insight[0][1]}"
+                        f"</b> of the Pitch and <b><font color=#392864>{direction_insight[1][1]:.2%}</font></b> in "
                         f"<b>{direction_insight[0][1]}</b> of the Pitch.", unsafe_allow_html=True)
             st.markdown(f"<b><font color=#d20614>{home_team}</font></b> had <b><font color=#d20614>"
                         f"{period_insight[1][0]:.2%}</font></b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in"
@@ -425,11 +426,11 @@ def game_events(data, data_info, data_players, match_day):
         """ Event Types """
         if game_time == "Entire Game":
             sequence_events = df_game[(df_game['Minute'] >= time_filter[0]) &
-                                        (df_game['Minute'] <= time_filter[1])]['Event'].unique()
+                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
         else:
             sequence_events = df_game[(df_game['Period'] == game_time) &
-                                        (df_game['Minute'] >= time_filter[0]) &
-                                        (df_game['Minute'] <= time_filter[1])]['Event'].unique()
+                                      (df_game['Minute'] >= time_filter[0]) &
+                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
 
         final_sequence_events = [event for event in event_options if event in sequence_events]
 
@@ -445,8 +446,10 @@ def game_events(data, data_info, data_players, match_day):
         if len(sequence_outcome_types) == 2:
             sequence_outcome = st.sidebar.selectbox(label="Event Outcome",
                                                     options=["Successful", "Unsuccessful"])
+            sequence_outcome_label = sequence_outcome
         else:
             sequence_outcome = sequence_outcome_types[0]
+            sequence_outcome_label = ""
 
         """ Game Sequence Analysis """
         if game_time == "Entire Game":
@@ -488,28 +491,60 @@ def game_events(data, data_info, data_players, match_day):
                     st.markdown(f"<b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
             with plot_col:
                 placeholder = st.empty()
-                for i in range(0, event_length + 1):
-                    with placeholder.container():
-                        fig_sequence, game_minute = game_event_sequence(data=final_sequence_df,
-                                                                        event_filter=i,
-                                                                        team_plot=sequence_team,
-                                                                        type_plot=plot_type,
-                                                                        event_teams=[home_team,
-                                                                                     away_team])
-                        if math.isnan(game_minute):
-                            game_minute = min_minute
-
-                        print(min_minute, game_minute)
-                        st.markdown(f"Game Minute <b><font color=#d20614>{game_minute}</font></b>",
-                                    unsafe_allow_html=True)
-                        st.pyplot(fig_sequence, clear_figure=True)
-                        if sequence_event == "Passes":
-                            time.sleep(0.01)
-                        else:
-                            time.sleep(1)
-
             with button_col:
-                st.success("All Events have been plotted!")
+                with st.spinner("Running..."):
+                    if sequence_event == "Passes":
+                        for i in range(time_filter[0], time_filter[1] + 1):
+                            with placeholder.container():
+                                fig_sequence, game_minute = game_event_sequence(data=final_sequence_df,
+                                                                                event_time=i,
+                                                                                team_plot=sequence_team,
+                                                                                type_plot=plot_type,
+                                                                                event_teams=[home_team,
+                                                                                             away_team],
+                                                                                event_type=sequence_event)
+                                if math.isnan(game_minute):
+                                    game_minute = time_filter[0]
+                                if fig_sequence is not None:
+                                    st.markdown(f"<b>{sequence_outcome_label}</b> <b><font color=#d20614>"
+                                                f"{sequence_event}</font></b> Events - Game Minute = <b>"
+                                                f"<font color=#d20614>{game_minute}</font></b>", unsafe_allow_html=True)
+                                    st.pyplot(fig_sequence, clear_figure=True)
+                                    time.sleep(0.1)
+                    else:
+                        for i in range(0, event_length + 1):
+                            with placeholder.container():
+                                fig_sequence, game_minute = game_event_sequence(data=final_sequence_df,
+                                                                                event_time=i,
+                                                                                team_plot=sequence_team,
+                                                                                type_plot=plot_type,
+                                                                                event_teams=[home_team,
+                                                                                             away_team],
+                                                                                event_type=sequence_event)
+                                if math.isnan(game_minute):
+                                    game_minute = time_filter[0]
+                                if fig_sequence is not None:
+                                    st.markdown(f"<b>{sequence_outcome_label}</b> <b><font color=#d20614>"
+                                                f"{sequence_event}</font></b> Events - Game Minute = <b>"
+                                                f"<font color=#d20614>{game_minute}</font></b>", unsafe_allow_html=True)
+                                    st.pyplot(fig_sequence, clear_figure=True)
+                                    time.sleep(0.1)
 
+            if fig_sequence is not None:
+                with button_col:
+                    event_no = ["Events" if event_length > 1 else "Event",
+                                "Events" if event_length > 1 else "is"]
+                    st.success(f"{event_length} {event_no[0]} between Minute {time_filter[0]} and Minute "
+                               f"{time_filter[1]} {event_no[1]} shown!")
+            else:
+                with plot_col:
+                    st.markdown(f"<h4>The are No Events Events between Minute {time_filter[0]} and Minute "
+                                f"{time_filter[1]}</h4>.", unsafe_allow_html=True)
+
+        st.sidebar.header(" ")
+
+        """ Event Sequence Page """
+    elif event_analysis == "Event Sequence":
+        st.sidebar.header(" ")
     else:
         pass
