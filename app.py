@@ -87,7 +87,7 @@ def players_info_query(team, match_day):
     game_player_opp_df = pd.DataFrame(game_player_query_opp)
 
     game_players_df = pd.concat([game_player_team_df, game_player_opp_df], axis=0)
-    game_players_df.dropna(inplace=True)
+    # game_players_df.dropna(inplace=True)
 
     return game_players_df
 

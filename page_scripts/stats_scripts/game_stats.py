@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import seaborn as sns
+import streamlit as st
 from matplotlib.colors import to_rgba
 from mplsoccer import Pitch
 import math
@@ -452,55 +453,143 @@ def game_passing_direction(data, plot_team, pass_length):
     return pitch_fig, pass_outcome, length_fig, direction_fig, successful_insight, unsuccessful_insight
 
 
-def game_event_sequence(data, event_time, team_plot, type_plot, event_teams, event_type):
+@st.cache
+def pass_sequence_creation(data):
+    """ Create Pass Sequence Df """
+    final_pass_df = data.copy()
+    final_pass_df = final_pass_df.sort_values(by=['Final Minute', "Second"])
+
+    """ Create Sequence """
+    sequence_passes = []
+    sequence_passes_end = [None]
+    sequence_pass_count = 1
+    event_pos = final_pass_df.columns.get_loc("Event")
+    outcome_pos = final_pass_df.columns.get_loc("Outcome")
+
+    for i in range(final_pass_df.shape[0]):
+        if final_pass_df.iloc[i, event_pos] == "Passes" and final_pass_df.iloc[i, outcome_pos] == "Successful":
+            sequence_passes.append(sequence_pass_count)
+            if i > 0:
+                sequence_passes_end.append(None)
+        else:
+            sequence_passes.append(None)
+            if i > 0:
+                sequence_passes_end.append(final_pass_df.iloc[i, event_pos])
+            if sequence_passes[i - 1] is not None:
+                sequence_pass_count = sequence_pass_count + 1
+
+    final_pass_df['Sequence No'] = sequence_passes
+    final_pass_df['Close Sequence'] = sequence_passes_end
+
+    for i in range(1, final_pass_df.shape[0]):
+        final_pass_df.iloc[i - 1, -1] = final_pass_df.iloc[i, -1]
+
+    final_pass_df.dropna(subset=['Sequence No'], inplace=True)
+    final_pass_df['Close Sequence'].fillna(method='bfill', inplace=True)
+    final_pass_df.reset_index(drop=True, inplace=True)
+    final_pass_df['Close Sequence'] = final_pass_df['Close Sequence'].replace("Passes", "Unsuccessful Passes")
+
+    return final_pass_df
+
+
+def pass_sequence_df(data, team_sequence, close_sequence, no_sequence, players_info):
     """ Create Sequence Df """
-    final_df = data.copy()
-    sequence_df = final_df.sort_values(by=['Minute', 'Second']).reset_index(drop=True)
-    if type_plot == "Heatmap":
-        sequence_df = sequence_df[sequence_df['Team'] == team_plot].reset_index(drop=True)
+    sequence_df = data.copy()
+    event_df = sequence_df[sequence_df['Close Sequence'] == close_sequence].reset_index(drop=True)
 
-    if event_type == "Passes":
-        sequence_df = sequence_df[sequence_df['Minute'] <= event_time].reset_index(drop=True)
-    else:
-        sequence_df = sequence_df.iloc[:event_time + 1, :]
+    """ New Order Sequence """
+    no_event = 1
+    new_order = [1]
+    for i in range(1, event_df.shape[0]):
+        if event_df.iloc[i, -2] == event_df.iloc[i - 1, -2]:
+            new_order.append(no_event)
+        else:
+            no_event = no_event + 1
+            new_order.append(no_event)
 
-    plt.clf()
+    event_df['Sequence No'] = new_order
+    pass_df = event_df[event_df['Sequence No'] == no_sequence].reset_index(drop=True)
+
+    start_x_loc = pass_df.columns.get_loc("Start X")
+    start_y_loc = pass_df.columns.get_loc("Start Y")
+    end_x_loc = pass_df.columns.get_loc("End X")
+    end_y_loc = pass_df.columns.get_loc("End Y")
+
+    for i in range(1, len(pass_df))[::-1]:
+        pass_df.iloc[i - 1, end_x_loc] = pass_df.iloc[i, start_x_loc]
+        pass_df.iloc[i - 1, end_y_loc] = pass_df.iloc[i, start_y_loc]
+
+    """ Create Final Data """
+    player_name_loc = pass_df.columns.get_loc("Player Name Receiver")
+    event_id = list(pass_df['Id'].values)
+    start_x = list(pass_df['Start X'].values)
+    start_y = list(pass_df['Start Y'].values)
+    end_x = list(pass_df['End X'].values)
+    end_y = list(pass_df['End Y'].values)
+    player_name = list(pass_df['Player Name'].values)
+    game_minute = list(pass_df['Minute'].values)
+    event_id.append(event_id[-1] + 1)
+    start_x.append(end_x[-1])
+    start_y.append(end_y[-1])
+    game_minute.append(game_minute[-1])
+    player_name.append(pass_df.iloc[-1, player_name_loc])
+    if close_sequence in ['Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties']:
+        if team_sequence == "Home":
+            end_x.append(100)
+            end_y.append(50)
+        else:
+            end_x.append(0)
+            end_y.append(50)
+
+    final_sequence_df = pd.DataFrame([event_id, game_minute, player_name, start_x, start_y, end_x, end_y]).T
+    final_sequence_df.columns = ["Id", "Minute", "Player Name", "Start X", "Start Y", "End X", "End Y"]
+    for col in ["Id", "Minute", "Start X", "Start Y", "End X", "End Y"]:
+        final_sequence_df[col] = final_sequence_df[col].astype(float)
+
+    player_names_unique = pd.DataFrame(final_sequence_df['Player Name'].unique(), columns=['Player Name'])
+    player_legend_df = pd.merge(left=player_names_unique,
+                                right=players_info[['Player Name', 'Jersey No']],
+                                left_on="Player Name",
+                                right_on="Player Name",
+                                how="left")
+
+    return final_sequence_df, player_legend_df
+
+
+def game_pass_sequence(data, players_info, event_no):
+    """ Create Final Df """
+    pass_df = data.copy()
+    players_df = players_info.copy()
+    pass_df = pass_df.iloc[:event_no, :].copy()
+
+    pass_df = pd.merge(left=pass_df,
+                       right=players_df[['Player Name', 'Jersey No']],
+                       left_on=['Player Name'],
+                       right_on=['Player Name'],
+                       how='left')
+
+    """ Create Passing Plot """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
 
-    current_game_minute = sequence_df['Minute'].max()
-    if sequence_df.shape[0] > 0:
-        """ Plot Events """
-        if type_plot == "Position":
-            sns.scatterplot(data=sequence_df,
-                            x="Start X",
-                            y="Start Y",
-                            s=250,
-                            hue='Team',
-                            palette={event_teams[0]: team_colors[0],
-                                     event_teams[1]: team_colors[1]},
-                            alpha=0.75,
-                            legend=False)
-        else:
-            if sequence_df.shape[0] < 5:
-                sns.scatterplot(data=sequence_df,
-                                x="Start X",
-                                y="Start Y",
-                                s=250,
-                                hue='Team',
-                                palette={event_teams[0]: team_colors[0],
-                                         event_teams[1]: team_colors[1]},
-                                alpha=0.75,
-                                legend=False)
-            else:
-                sns.kdeplot(x=sequence_df['Start X'],
-                            y=sequence_df['Start Y'],
-                            shade=True,
-                            shade_lowest=False,
-                            alpha=0.25,
-                            n_levels=10,
-                            cmap='plasma')
-    else:
-        pitch_fig = None
+    pitch.arrows(pass_df['Start X'], pass_df['Start Y'],
+                 pass_df['End X'], pass_df['End Y'],
+                 width=3,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=0.5,
+                 ax=ax_pitch)
 
-    return pitch_fig, current_game_minute
+    pitch.scatter(pass_df['Start X'], pass_df['Start Y'],
+                  s=1000,
+                  color='#d20614',
+                  edgecolors='black',
+                  linewidth=1,
+                  alpha=0.5,
+                  ax=ax_pitch)
+    for index, row in pass_df.iterrows():
+        pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff', va='center',
+                       ha='center', size=16, weight='bold', ax=ax_pitch)
+
+    return pitch_fig

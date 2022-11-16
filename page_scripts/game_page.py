@@ -1,15 +1,20 @@
 import time
-import math
 import streamlit as st
 from PIL import Image
-from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis, \
-    game_passing_network, game_passing_direction, game_event_sequence
+from page_scripts.stats_scripts.game_stats import game_staring_11, game_analysis, game_passing_network, \
+    game_passing_direction, pass_sequence_creation, pass_sequence_df, game_pass_sequence
 
 
 event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
                  'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
                  'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',
                  'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
+
+event_options_sequence = ['Goals', 'Unsuccessful Passes', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties',
+                          'Ball Touches', 'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions',
+                          'Aerial Duels', 'Tackles', 'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes',
+                          'Fouls', 'Offsides', 'Errors', 'Keeper Saves', 'Keeper Claims', 'Keeper Punches',
+                          'Keeper Pickups', 'Keeper Sweeper']
 
 
 def game_events(data, data_info, data_players, match_day):
@@ -18,13 +23,13 @@ def game_events(data, data_info, data_players, match_day):
 
     # ##### Event Analysis Options
     st.sidebar.header("Analysis Options")
-    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Direction", "Event Sequence",
-                       "Passing Sequence"]
+    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Direction", "Passing Sequence"]
     event_analysis = st.sidebar.selectbox("Select Analysis", game_event_menu)
 
     """ Create Game Df """
     df_game = data.copy()
     game_info = data_info.copy()
+    starting_players = data_players.copy()
 
     """ Game Info """
     home_team = df_game[df_game['Venue'] == 'Home']['Team'].unique()[0]
@@ -36,8 +41,8 @@ def game_events(data, data_info, data_players, match_day):
                            (game_info['Match Day'] == match_day)]['FT Score'].values[0]
 
     """ Page Configuration """
-    if event_analysis == "Event Sequence":
-        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4.75, 2.5, 2, 2, 2, 1.5, 2, 6])
+    if event_analysis == "Passing Sequence":
+        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4, 2.5, 2, 2, 2, 1, 2, 7.5])
     elif event_analysis != "Starting 11":
         tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([8.5, 2.5, 2, 2, 2, 1, 2, 6.5])
     else:
@@ -63,7 +68,7 @@ def game_events(data, data_info, data_players, match_day):
         st.title(away_score)
 
     """ Minutes Filter """
-    if event_analysis != "Starting 11":
+    if event_analysis != "Starting 11" and event_analysis != "Passing Sequence":
         st.sidebar.header("Time Filter")
         game_time = st.sidebar.selectbox(label="Game Phase",
                                          options=["Entire Game", "1st Half", "2nd Half"])
@@ -100,6 +105,17 @@ def game_events(data, data_info, data_players, match_day):
             elif time_option == "76-90+":
                 time_filter = [76, max_minute]
 
+    elif event_analysis == "Passing Sequence":
+        st.sidebar.header("Time Filter")
+        game_time = st.sidebar.selectbox(label="Game Phase",
+                                         options=["1st Half", "2nd Half"])
+        if game_time == "1st Half":
+            max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
+            time_filter = (0, max_minute)
+        else:
+            max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
+            time_filter = (45, max_minute)
+
         """ Starting 11 Page """
     if event_analysis == "Starting 11":
         with tab_col:
@@ -108,14 +124,15 @@ def game_events(data, data_info, data_players, match_day):
                         f"</h3>", unsafe_allow_html=True)
         h_players_col, plot_col, a_players_col = st.columns([2, 6, 2])
 
-        starting_11_plot = game_staring_11(data=data_players,
+        starting_players.dropna(inplace=True)
+        starting_11_plot = game_staring_11(data=starting_players,
                                            game_teams=[home_team,
                                                        away_team])
 
         with plot_col:
             st.pyplot(fig=starting_11_plot)
         with h_players_col:
-            h_players = data_players[data_players['Team'] == home_team]
+            h_players = starting_players[starting_players['Team'] == home_team]
             st.header("")
             st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
             for i in range(len(h_players)):
@@ -129,7 +146,7 @@ def game_events(data, data_info, data_players, match_day):
                                 unsafe_allow_html=True)
 
         with a_players_col:
-            a_players = data_players[data_players['Team'] == away_team]
+            a_players = starting_players[starting_players['Team'] == away_team]
             st.header("")
             st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
             for i in range(len(h_players)):
@@ -287,12 +304,13 @@ def game_events(data, data_info, data_players, match_day):
                                     (df_game['Minute'] <= time_filter[1]) &
                                     (df_game['Event'] == "Passes")]
 
+        starting_players.dropna(inplace=True)
         analysis_col, plot_col, legend_col = st.columns([4, 8, 2])
         with legend_col:
             network_team = st.selectbox(label='Select Team',
                                         options=[home_team, away_team])
 
-            legend_players = data_players[data_players['Team'] == network_team]
+            legend_players = starting_players[starting_players['Team'] == network_team]
             st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
             for i in range(len(legend_players)):
                 jersey_no = legend_players.loc[i, 'Jersey No']
@@ -304,9 +322,10 @@ def game_events(data, data_info, data_players, match_day):
                     st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
                                 unsafe_allow_html=True)
 
-        network_plot, top_plot, starting_insights, top_insights = game_passing_network(data=final_pass_df,
-                                                                                       starting_players=data_players,
-                                                                                       plot_team=network_team)
+        network_plot, top_plot, starting_insights, top_insights = \
+            game_passing_network(data=final_pass_df,
+                                 starting_players=starting_players,
+                                 plot_team=network_team)
         with plot_col:
             with plot_col:
                 st.markdown(f"<b>{network_team}</b> <b><font color=#d20614>Passing Network</font></b> between Minute<b>"
@@ -415,136 +434,74 @@ def game_events(data, data_info, data_players, match_day):
 
         st.sidebar.header(" ")
 
-        """ Event Sequence Page """
-    elif event_analysis == "Event Sequence":
+        """ Passing Sequence Page """
+    elif event_analysis == "Passing Sequence":
         with tab_col:
             st.subheader("")
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
-                        f"Game Event Sequence</font></h3>", unsafe_allow_html=True)
+                        f"Passing Sequence</font></h3>", unsafe_allow_html=True)
 
-        legend_col, plot_col, button_col = st.columns([3, 10, 3])
-        """ Event Types """
-        if game_time == "Entire Game":
-            sequence_events = df_game[(df_game['Minute'] >= time_filter[0]) &
-                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
-        else:
-            sequence_events = df_game[(df_game['Period'] == game_time) &
-                                      (df_game['Minute'] >= time_filter[0]) &
-                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
+        legend_col, plot_col, button_col, _ = st.columns([2, 8, 2, 1])
 
-        final_sequence_events = [event for event in event_options if event in sequence_events]
+        with legend_col:
+            pass_team = st.selectbox(label='Select Team',
+                                     options=[home_team, away_team])
+            team_logo = Image.open(f'images/{pass_team}.png')
+            st.image(team_logo, width=100)
 
-        """ Event Filter """
-        st.sidebar.header("Event Filter")
+        """ Final Df """
+        event_df = df_game[(df_game['Team'] == pass_team) &
+                           (df_game['Period'] == game_time)]
 
-        sequence_event = st.sidebar.selectbox(label="Event Type",
-                                              options=final_sequence_events)
-
-        sequence_outcome_types = df_game[(df_game['Minute'] >= time_filter[0]) &
-                                         (df_game['Minute'] <= time_filter[1]) &
-                                         (df_game['Event'] == sequence_event)]['Outcome'].unique()
-        if len(sequence_outcome_types) == 2:
-            sequence_outcome = st.sidebar.selectbox(label="Event Outcome",
-                                                    options=["Successful", "Unsuccessful"])
-            sequence_outcome_label = sequence_outcome
-        else:
-            sequence_outcome = sequence_outcome_types[0]
-            sequence_outcome_label = ""
-
-        """ Game Sequence Analysis """
-        if game_time == "Entire Game":
-            final_sequence_df = df_game[(df_game['Outcome'] == sequence_outcome) &
-                                        (df_game['Minute'] >= time_filter[0]) &
-                                        (df_game['Minute'] <= time_filter[1]) &
-                                        (df_game['Event'] == sequence_event)].reset_index(drop=True)
-        else:
-            final_sequence_df = df_game[(df_game['Period'] == game_time) &
-                                        (df_game['Outcome'] == sequence_outcome) &
-                                        (df_game['Minute'] >= time_filter[0]) &
-                                        (df_game['Minute'] <= time_filter[1]) &
-                                        (df_game['Event'] == sequence_event)].reset_index(drop=True)
-
-        if final_sequence_df.shape[0] > 5:
-            plot_type = st.sidebar.selectbox(label="Plot Type",
-                                             options=['Position', "Heatmap"])
-        else:
-            plot_type = "Position"
-
-        if plot_type == "Heatmap":
-            with legend_col:
-                sequence_team = st.selectbox(label='Select Team',
-                                             options=[home_team, away_team])
-                team_logo = Image.open(f'images/{sequence_team}.png')
-                st.image(team_logo, width=100)
-                event_length = final_sequence_df[final_sequence_df['Team'] == sequence_team].shape[0]
-        else:
-            sequence_team = None
-            event_length = final_sequence_df.shape[0]
+        pass_df = pass_sequence_creation(data=event_df)
+        valid_sequence_options = pass_df['Close Sequence'].unique()
+        close_sequence_options = [stat for stat in event_options_sequence if stat in valid_sequence_options]
 
         with button_col:
-            start_sequence = st.button("Start Sequence")
+            close_event = st.selectbox(label="Pass Sequence End",
+                                       options=close_sequence_options)
+        no_event_sequence = len(pass_df[pass_df['Close Sequence'] == close_event]['Sequence No'].unique())
+        with button_col:
+            no_close_event = st.selectbox(label="Pass Sequence No",
+                                          options=[i for i in range(1, no_event_sequence + 1)])
+
+        """ Passing Sequence Analysis """
+        if pass_team == home_team:
+            sequence_team_type = "Home"
+        else:
+            sequence_team_type = "Away"
+        final_pass_seq_df, legend_players = pass_sequence_df(data=pass_df,
+                                                             team_sequence=sequence_team_type,
+                                                             close_sequence=close_event,
+                                                             no_sequence=no_close_event,
+                                                             players_info=data_players)
+
+        start_sequence = st.sidebar.button("Start Sequence")
         if start_sequence:
             with legend_col:
-                if plot_type == "Position":
-                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-                    st.markdown(f"<b><font color=#d20614>{home_team}</font></b>", unsafe_allow_html=True)
-                    st.markdown(f"<b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
+                st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+                for i in range(len(legend_players)):
+                    jersey_no = legend_players.loc[i, 'Jersey No']
+                    player_name = legend_players.loc[i, 'Player Name']
+                    if jersey_no < 10:
+                        st.markdown(f"<b>0{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                    unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
+                                    unsafe_allow_html=True)
+
             with plot_col:
                 placeholder = st.empty()
-            with button_col:
-                with st.spinner("Running..."):
-                    if sequence_event == "Passes":
-                        for i in range(time_filter[0], time_filter[1] + 1):
-                            with placeholder.container():
-                                fig_sequence, game_minute = game_event_sequence(data=final_sequence_df,
-                                                                                event_time=i,
-                                                                                team_plot=sequence_team,
-                                                                                type_plot=plot_type,
-                                                                                event_teams=[home_team,
-                                                                                             away_team],
-                                                                                event_type=sequence_event)
-                                if math.isnan(game_minute):
-                                    game_minute = time_filter[0]
-                                if fig_sequence is not None:
-                                    st.markdown(f"<b>{sequence_outcome_label}</b> <b><font color=#d20614>"
-                                                f"{sequence_event}</font></b> Events - Game Minute = <b>"
-                                                f"<font color=#d20614>{game_minute}</font></b>", unsafe_allow_html=True)
-                                    st.pyplot(fig_sequence, clear_figure=True)
-                                    time.sleep(0.1)
-                    else:
-                        for i in range(0, event_length + 1):
-                            with placeholder.container():
-                                fig_sequence, game_minute = game_event_sequence(data=final_sequence_df,
-                                                                                event_time=i,
-                                                                                team_plot=sequence_team,
-                                                                                type_plot=plot_type,
-                                                                                event_teams=[home_team,
-                                                                                             away_team],
-                                                                                event_type=sequence_event)
-                                if math.isnan(game_minute):
-                                    game_minute = time_filter[0]
-                                if fig_sequence is not None:
-                                    st.markdown(f"<b>{sequence_outcome_label}</b> <b><font color=#d20614>"
-                                                f"{sequence_event}</font></b> Events - Game Minute = <b>"
-                                                f"<font color=#d20614>{game_minute}</font></b>", unsafe_allow_html=True)
-                                    st.pyplot(fig_sequence, clear_figure=True)
-                                    time.sleep(0.1)
+                for i in range(1, len(final_pass_seq_df) + 1):
+                    with placeholder.container():
+                        fig_pass_sequence = game_pass_sequence(data=final_pass_seq_df,
+                                                               players_info=data_players,
+                                                               event_no=i)
 
-            if fig_sequence is not None:
-                with button_col:
-                    event_no = ["Events" if event_length > 1 else "Event",
-                                "Events" if event_length > 1 else "is"]
-                    st.success(f"{event_length} {event_no[0]} between Minute {time_filter[0]} and Minute "
-                               f"{time_filter[1]} {event_no[1]} shown!")
-            else:
-                with plot_col:
-                    st.markdown(f"<h4>The are No Events Events between Minute {time_filter[0]} and Minute "
-                                f"{time_filter[1]}</h4>.", unsafe_allow_html=True)
+                        st.pyplot(fig_pass_sequence, clear_figure=True)
+                        time.sleep(0.5)
 
         st.sidebar.header(" ")
 
-        """ Event Sequence Page """
-    elif event_analysis == "Event Sequence":
-        st.sidebar.header(" ")
     else:
         pass
