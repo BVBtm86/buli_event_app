@@ -11,10 +11,48 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 
 team_colors = ["#d20614", "#392864"]
 
+original_event_name = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
+                       'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
+                       'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',
+                       'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
+
+sequence_event_name = ['Unsuccessful Pass', 'Goal', 'Shot Saved', 'Shot Missed', 'Shot On Post', 'Penalty',
+                       'Unsuccessful Ball Touch', 'Unsuccessful Dribble', 'Corner Awarded', 'Ball Recovery',
+                       'Interception', 'Unsuccessful Aerial Duel', 'Tackled', 'Dispossessed', 'Clearance',
+                       'Challenged', 'Blocked Pass', 'Fouled', 'Offside', 'Error', 'Keeper Save',
+                       'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
+
 
 def calculate_distance(x_start, y_start, x_end, y_end):
     pass_distance = math.sqrt((x_end * 1.05 - x_start * 1.05) ** 2 + (y_end * 0.68 - y_start * 0.68) ** 2)
     return pass_distance
+
+
+def empty_pitch():
+    """ Create Pitch """
+    pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
+    pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    return pitch_fig
 
 
 def game_staring_11(data, game_teams):
@@ -24,6 +62,25 @@ def game_staring_11(data, game_teams):
     """ Plot Events """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(10, 10))
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
 
     df_starting_11['Team'] = pd.Categorical(df_starting_11['Team'], game_teams)
     df_starting_11 = df_starting_11.sort_values(by='Team')
@@ -64,6 +121,25 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
     """ Plot Events """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(10, 10))
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
 
     if plot_type == "Position":
         sns.scatterplot(data=final_df,
@@ -265,24 +341,44 @@ def game_passing_network(data, starting_players, plot_team):
     color[:, 3] = c_transparency
 
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
-    pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
     if pass_df.shape[0] > 1:
         pitch.lines(network_df['Start X'], network_df['Start Y'],
                     network_df['End X'], network_df['End Y'],
                     lw=network_df['Pass Width'],
                     color=color,
                     zorder=1,
-                    ax=ax_pitch)
+                    ax=pitch_ax)
         pitch.scatter(avg_df['Start X'], avg_df['Start Y'],
                       s=avg_df['Size'],
                       color='#d20614',
                       edgecolors='black',
                       linewidth=1,
                       alpha=0.5,
-                      ax=ax_pitch)
+                      ax=pitch_ax)
         for index, row in avg_df.iterrows():
             pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff', va='center',
-                           ha='center', size=16, weight='bold', ax=ax_pitch)
+                           ha='center', size=16, weight='bold', ax=pitch_ax)
 
     """ Analysis Network Data """
     top_passes_df = network_df.nlargest(10, 'Event')
@@ -365,13 +461,32 @@ def game_passing_direction(data, plot_team, pass_length):
     """ Plot Passing Data """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
 
     """ Plot the Successful Passes """
     pitch.arrows(pass_successful['Start X'], pass_successful['Start Y'],
                  pass_successful['End X'], pass_successful['End Y'],
                  width=2,
-                 headwidth=10,
-                 headlength=10,
+                 headwidth=5,
+                 headlength=5,
                  color='#d20614',
                  alpha=0.75,
                  ax=pitch_ax)
@@ -380,8 +495,8 @@ def game_passing_direction(data, plot_team, pass_length):
     pitch.arrows(pass_unsuccessful['Start X'], pass_unsuccessful['Start Y'],
                  pass_unsuccessful['End X'], pass_unsuccessful['End Y'],
                  width=1,
-                 headwidth=10,
-                 headlength=10,
+                 headwidth=5,
+                 headlength=5,
                  color='#392864',
                  alpha=0.75,
                  ax=pitch_ax)
@@ -454,48 +569,78 @@ def game_passing_direction(data, plot_team, pass_length):
 
 
 @st.cache
-def pass_sequence_creation(data):
+def pass_sequence_creation(data, sequence_team):
     """ Create Pass Sequence Df """
     final_pass_df = data.copy()
-    final_pass_df = final_pass_df.sort_values(by=['Final Minute', "Second"])
+    final_pass_df = final_pass_df.sort_values(by=["Final Minute", "Second"]).reset_index(drop=True)
 
     """ Create Sequence """
-    sequence_passes = []
-    sequence_passes_end = [None]
-    sequence_pass_count = 1
+    period_index = final_pass_df[final_pass_df['Period'] == '2nd Half'].index[0]
+    team_pos = final_pass_df.columns.get_loc("Team")
     event_pos = final_pass_df.columns.get_loc("Event")
     outcome_pos = final_pass_df.columns.get_loc("Outcome")
-
+    sequence_passes = []
+    sequence_passes_end = []
+    sequence_pass_count = 0
+    current_seq = "Successful"
     for i in range(final_pass_df.shape[0]):
-        if final_pass_df.iloc[i, event_pos] == "Passes" and final_pass_df.iloc[i, outcome_pos] == "Successful":
-            sequence_passes.append(sequence_pass_count)
-            if i > 0:
+        current_team_name = final_pass_df.iloc[i, team_pos]
+        event_name = final_pass_df.iloc[i, event_pos]
+        outcome_name = final_pass_df.iloc[i, outcome_pos]
+        if i == 0:
+            if event_name == "Passes" and outcome_name == "Successful":
+                sequence_pass_count += 1
+                sequence_passes.append(sequence_pass_count)
+                current_seq = "Successful"
+        elif i == period_index:
+            if event_name == "Passes" and outcome_name == "Successful":
+                sequence_pass_count += 1
+                sequence_passes.append(sequence_pass_count)
+                current_seq = "Successful"
+        else:
+            previous_team_name = final_pass_df.iloc[i - 1, team_pos]
+            if current_team_name == previous_team_name and event_name == "Passes" and outcome_name == "Successful":
+                if current_seq == "Unsuccessful":
+                    sequence_pass_count += 1
+                sequence_passes.append(sequence_pass_count)
+                current_seq = "Successful"
+            else:
+                sequence_pass_count += 1
+                sequence_passes.append(sequence_pass_count)
+                if event_name == "Passes" and outcome_name == "Successful":
+                    current_seq = "Successful"
+                else:
+                    current_seq = "Unsuccessful"
+        if event_name == "Passes" and outcome_name == "Successful":
+            if i == period_index - 1:
+                sequence_passes_end.append(event_name)
+            else:
                 sequence_passes_end.append(None)
         else:
-            sequence_passes.append(None)
-            if i > 0:
-                sequence_passes_end.append(final_pass_df.iloc[i, event_pos])
-            if sequence_passes[i - 1] is not None:
-                sequence_pass_count = sequence_pass_count + 1
+            sequence_passes_end.append(event_name)
 
     final_pass_df['Sequence No'] = sequence_passes
-    final_pass_df['Close Sequence'] = sequence_passes_end
+    final_pass_df['Sequence End'] = sequence_passes_end
+    final_pass_df['Sequence End'].fillna(method='bfill', inplace=True)
+    final_pass_df = final_pass_df[
+        (final_pass_df['Event'] == "Passes") & (final_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
+    final_pass_df['Sequence End'] = final_pass_df['Sequence End'].map(dict(zip(original_event_name,
+                                                                               sequence_event_name)))
 
-    for i in range(1, final_pass_df.shape[0]):
-        final_pass_df.iloc[i - 1, -1] = final_pass_df.iloc[i, -1]
+    sequence_team_df = final_pass_df[final_pass_df['Team'] == sequence_team].reset_index(drop=True)
 
-    final_pass_df.dropna(subset=['Sequence No'], inplace=True)
-    final_pass_df['Close Sequence'].fillna(method='bfill', inplace=True)
-    final_pass_df.reset_index(drop=True, inplace=True)
-    final_pass_df['Close Sequence'] = final_pass_df['Close Sequence'].replace("Passes", "Unsuccessful Passes")
-
-    return final_pass_df
+    """ Sequence Stats """
+    no_sequences = sequence_team_df['Sequence No'].nunique()
+    avg_sequence = sequence_team_df.groupby(['Sequence No'])['Id'].count().mean()
+    total_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=("Total Seq Passes", "Total Avg Passes"),
+                                        columns=['#'])
+    return sequence_team_df, total_sequence_stats
 
 
 def pass_sequence_df(data, team_sequence, close_sequence, no_sequence, players_info):
     """ Create Sequence Df """
     sequence_df = data.copy()
-    event_df = sequence_df[sequence_df['Close Sequence'] == close_sequence].reset_index(drop=True)
+    event_df = sequence_df[sequence_df['Sequence End'] == close_sequence].reset_index(drop=True)
 
     """ New Order Sequence """
     no_event = 1
@@ -533,7 +678,7 @@ def pass_sequence_df(data, team_sequence, close_sequence, no_sequence, players_i
     start_y.append(end_y[-1])
     game_minute.append(game_minute[-1])
     player_name.append(pass_df.iloc[-1, player_name_loc])
-    if close_sequence in ['Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties']:
+    if close_sequence in ['Goal', 'Shot Saved', 'Shot Missed', 'Shot On Post', 'Penalty']:
         if team_sequence == "Home":
             end_x.append(100)
             end_y.append(50)
@@ -553,7 +698,13 @@ def pass_sequence_df(data, team_sequence, close_sequence, no_sequence, players_i
                                 right_on="Player Name",
                                 how="left")
 
-    return final_sequence_df, player_legend_df
+    """ Sequence Stats """
+    no_sequences = event_df['Sequence No'].nunique()
+    avg_sequence = event_df.groupby(['Sequence No'])['Id'].count().mean()
+    event_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=("Event Seq Passes", "Event Avg Passes"),
+                                        columns=['#'])
+
+    return final_sequence_df, player_legend_df, event_sequence_stats
 
 
 def game_pass_sequence(data, players_info, event_no):
@@ -569,8 +720,28 @@ def game_pass_sequence(data, players_info, event_no):
                        how='left')
 
     """ Create Passing Plot """
+    current_game_minute = pass_df['Minute'].max()
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
-    pitch_fig, ax_pitch = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
+    pitch.arrows(0, 102,
+                 15, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#d20614',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
+
+    pitch.arrows(100, 102,
+                 85, 102,
+                 width=2,
+                 headwidth=5,
+                 headlength=5,
+                 color='#392864',
+                 alpha=1,
+                 label='Attack Direction',
+                 ax=pitch_ax)
 
     pitch.arrows(pass_df['Start X'], pass_df['Start Y'],
                  pass_df['End X'], pass_df['End Y'],
@@ -579,7 +750,7 @@ def game_pass_sequence(data, players_info, event_no):
                  headlength=5,
                  color='#d20614',
                  alpha=0.5,
-                 ax=ax_pitch)
+                 ax=pitch_ax)
 
     pitch.scatter(pass_df['Start X'], pass_df['Start Y'],
                   s=1000,
@@ -587,9 +758,10 @@ def game_pass_sequence(data, players_info, event_no):
                   edgecolors='black',
                   linewidth=1,
                   alpha=0.5,
-                  ax=ax_pitch)
+                  ax=pitch_ax)
+
     for index, row in pass_df.iterrows():
         pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff', va='center',
-                       ha='center', size=16, weight='bold', ax=ax_pitch)
+                       ha='center', size=16, weight='bold', ax=pitch_ax)
 
-    return pitch_fig
+    return pitch_fig, current_game_minute

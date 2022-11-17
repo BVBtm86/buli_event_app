@@ -17,6 +17,26 @@ st.set_page_config(layout="wide",
                    page_icon=buli_logo,
                    initial_sidebar_state="expanded")
 
+# ##### Button Color
+button_color = st.markdown("""
+<style>
+div.stButton > button:first-child {
+    background-color: #ffffff;
+    color:#d20614;
+    width: 100%;
+    border-color: #ffffff;
+    font-weight: bold;
+}
+div.stButton > button:hover {
+    background-color: #d20614;
+    color:#ffffff;
+    border-color: #ffffff;
+    font-weight: bold;
+    width: 100%;
+    }
+</style>""", unsafe_allow_html=True)
+
+
 season = "2022-2023"
 buli_logo_col, text_col = st.columns([1, 10])
 buli_container = st.container()
