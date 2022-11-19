@@ -5,6 +5,7 @@ from PIL import Image
 from page_scripts.stats_scripts.game_stats import empty_pitch, game_staring_11, game_analysis, game_passing_network, \
     game_passing_direction, pass_sequence_creation, pass_sequence_df, game_pass_sequence
 
+# ##### Event Options
 event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
                  'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
                  'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',

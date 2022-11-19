@@ -1,21 +1,9 @@
-import streamlit as st
 from streamlit_option_menu import option_menu
-import pandas as pd
-import numpy as np
-from supabase import create_client
-from PIL import Image
+from page_scripts.stats_scripts.utilities import *
 from page_scripts.game_page import game_events
 from page_scripts.team_page import team_events
 from page_scripts.player_page import player_events
 
-
-# ##### Logo and App Info
-buli_logo = Image.open('images/Bundesliga.png')
-
-st.set_page_config(layout="wide",
-                   page_title="Bundesliga Events App",
-                   page_icon=buli_logo,
-                   initial_sidebar_state="expanded")
 
 # ##### Button Color
 button_color = st.markdown("""
@@ -36,7 +24,7 @@ div.stButton > button:hover {
     }
 </style>""", unsafe_allow_html=True)
 
-
+# ##### Main Page
 season = "2022-2023"
 buli_logo_col, text_col = st.columns([1, 10])
 buli_container = st.container()
@@ -45,71 +33,8 @@ with buli_container:
         st.image(buli_logo, use_column_width=True)
     with text_col:
         st.header("")
-        st.markdown(f"<h1>Bundesliga Game Events <font color = #d20614>{season}</font></h1>", unsafe_allow_html=True)
-
-
-# ##### Supabase Connection #####
-@st.experimental_singleton
-def init_connection():
-    url = st.secrets["supabase_url"]
-    key = st.secrets["supabase_key"]
-    return create_client(url, key)
-
-
-supabase = init_connection()
-
-
-# ##### Supabase Table Queries
-@st.experimental_memo(ttl=600)
-def info_query():
-    """ Return Game Info """
-    game_info_query = supabase.table('game_info_stats').select('*').execute().data
-    game_info = pd.DataFrame(game_info_query)
-
-    return game_info
-
-
-@st.experimental_memo(ttl=600)
-def event_query(team, match_day):
-    """ Return Game Events """
-    game_team_query = supabase.table('game_events_stats').select('*').\
-        eq('Team', team).eq('Match Day', match_day).execute().data
-    game_team_df = pd.DataFrame(game_team_query)
-    game_opp_query = supabase.table('game_events_stats').select('*').\
-        eq('Opponent', team).eq('Match Day', match_day).execute().data
-    game_opp_df = pd.DataFrame(game_opp_query)
-
-    if game_team_df['Venue'].unique()[0] == 'Away':
-        game_team_df['Start X'] = np.abs(game_team_df['Start X'] - 100)
-        game_team_df['End X'] = np.abs(game_team_df['End X'] - 100)
-        game_team_df['Start Y'] = np.abs(game_team_df['Start Y'] - 100)
-        game_team_df['End Y'] = np.abs(game_team_df['End Y'] - 100)
-
-    if game_opp_df['Venue'].unique()[0] == 'Away':
-        game_opp_df['Start X'] = np.abs(game_opp_df['Start X'] - 100)
-        game_opp_df['End X'] = np.abs(game_opp_df['End X'] - 100)
-        game_opp_df['Start Y'] = np.abs(game_opp_df['Start Y'] - 100)
-        game_opp_df['End Y'] = np.abs(game_opp_df['End Y'] - 100)
-
-    game_event_df = pd.concat([game_team_df, game_opp_df], axis=0)
-
-    return game_event_df
-
-
-@st.experimental_memo(ttl=600)
-def players_info_query(team, match_day):
-    """ Return Player Game Info """
-    game_player_query_team = supabase.table('game_player_info').select('*').\
-        eq('Team', team).eq('Match Day', match_day).execute().data
-    game_player_team_df = pd.DataFrame(game_player_query_team)
-    game_player_query_opp = supabase.table('game_player_info').select('*').\
-        eq('Opponent', team).eq('Match Day', match_day).execute().data
-    game_player_opp_df = pd.DataFrame(game_player_query_opp)
-
-    game_players_df = pd.concat([game_player_team_df, game_player_opp_df], axis=0)
-    # game_players_df.dropna(inplace=True)
-
-    return game_players_df
+        st.markdown(f"<h1><font color = #d20614>Bundesliga</font> Game Events <font color = #d20614>{season}</font>"
+                    f"</h1>", unsafe_allow_html=True)
 
 
 # ##### Main App #####
@@ -134,6 +59,10 @@ def main():
                                               options=buli_teams,
                                               index=buli_teams.index("Borussia Dortmund"))
 
+    # ##### Info Data
+    info_df = info_query()
+    # game_event_df, info_df, info_players_df = read_events_data()
+
     if event_analysis == 'Home':
         st.subheader("")
         st.markdown(
@@ -150,7 +79,6 @@ def main():
     """
     elif event_analysis == 'Game':
         # ##### Filter by Team and Match Day
-        info_df = info_query()
         max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
         match_day = st.sidebar.selectbox(label="Match Day",
                                          options=[i for i in range(1, max_match_day + 1)],
@@ -165,7 +93,86 @@ def main():
                     match_day=match_day)
 
     elif event_analysis == 'Team':
-        team_events(team=favourite_team)
+
+        # ##### Team Analysis Options
+        st.sidebar.header("Analysis Options")
+        team_event_menu = ["Game Events", "Passing Network", "Passing Direction"]
+        analysis_option = st.sidebar.selectbox("Select Analysis", team_event_menu)
+
+        # ##### Opponents vs Other Team Options
+        team_event_menu = ["vs Opponents", "vs Team"]
+        team_analysis = st.sidebar.selectbox(label="Select Analysis",
+                                             options=team_event_menu)
+
+        if team_analysis == "vs Opponents":
+            opponent_sql = favourite_team
+        else:
+            opponent_selection = [team for team in buli_teams if team != favourite_team]
+            team_opponent = st.sidebar.selectbox(label="Select Team",
+                                                 options=opponent_selection)
+            opponent_sql = team_opponent
+
+        # ##### Season Filter
+        season_options = ["Entire Season", "1st Half of The Season", "2nd Half of The Season"]
+        if info_df[info_df['Team'] == "Borussia Dortmund"]['Match Day'].max() < 18:
+            season_options.remove("2nd Half of The Season")
+
+        st.sidebar.header("Game Filter")
+        season_filter = st.sidebar.selectbox(label="Season Filter",
+                                             options=season_options)
+
+        if season_filter == "1st Half of The Season":
+            period_filter = [1, 17]
+        elif season_filter == "2nd Half of The Season":
+            period_filter = [18, 34]
+        else:
+            period_filter = [1, 34]
+
+        # ##### Venue Filter
+        all_venues = \
+            info_df[(info_df['Team'] == favourite_team) &
+                    (info_df['Match Day'] >= period_filter[0]) &
+                    (info_df['Match Day'] <= period_filter[1])]['Venue'].unique()
+
+        venue_options = ["All Games"]
+        venue_options.extend([venue for venue in all_venues])
+        venue_filter = st.sidebar.selectbox(label="Venue Filter",
+                                            options=venue_options)
+
+        # ##### Result Filter
+        if venue_filter == "All Games":
+            all_results = info_df[(info_df['Team'] == favourite_team) &
+                                  (info_df['Match Day'] >= period_filter[0]) &
+                                  (info_df['Match Day'] <= period_filter[1])]['Result'].unique()
+        else:
+            all_results = info_df[(info_df['Team'] == favourite_team) &
+                                  (info_df['Match Day'] >= period_filter[0]) &
+                                  (info_df['Match Day'] <= period_filter[1]) &
+                                  (info_df['Venue'] == venue_filter)]['Result'].unique()
+
+        result_options = ["All Results"]
+        result_options.extend([result for result in all_results])
+        result_filter = st.sidebar.selectbox(label="Result Filter",
+                                             options=result_options)
+
+        # ##### Final Event Data
+        team_event_df = team_query(team_sql=favourite_team,
+                                   opponent_sql=opponent_sql,
+                                   period_sql=period_filter,
+                                   venue_sql=venue_filter,
+                                   result_sql=result_filter)
+
+        # ##### Team Event Page
+        event_match_days = team_event_df[team_event_df['Team'] == favourite_team]['Match Day'].unique()
+        team_players_df = team_players_query(team=favourite_team,
+                                             match_days=event_match_days)
+
+        team_events(data=team_event_df,
+                    players_data=team_players_df,
+                    analysis_option=analysis_option,
+                    analysis_team=team_analysis,
+                    team_name=favourite_team,
+                    opp_name=opponent_sql)
 
     elif event_analysis == 'Player':
         team_player = st.sidebar.selectbox("Select Player", buli_teams)

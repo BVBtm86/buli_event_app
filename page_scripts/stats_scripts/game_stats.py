@@ -37,9 +37,8 @@ def empty_pitch():
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -47,9 +46,8 @@ def empty_pitch():
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     return pitch_fig
@@ -67,9 +65,8 @@ def game_staring_11(data, game_teams):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -77,9 +74,8 @@ def game_staring_11(data, game_teams):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     df_starting_11['Team'] = pd.Categorical(df_starting_11['Team'], game_teams)
@@ -126,9 +122,8 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -136,9 +131,8 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     if plot_type == "Position":
@@ -347,9 +341,8 @@ def game_passing_network(data, starting_players, plot_team):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -357,9 +350,8 @@ def game_passing_network(data, starting_players, plot_team):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     if pass_df.shape[0] > 1:
@@ -466,9 +458,8 @@ def game_passing_direction(data, plot_team, pass_length):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -476,9 +467,8 @@ def game_passing_direction(data, plot_team, pass_length):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     """ Plot the Successful Passes """
@@ -728,9 +718,8 @@ def game_pass_sequence(data, players_info, event_no):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#d20614',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(100, 102,
@@ -738,9 +727,8 @@ def game_pass_sequence(data, players_info, event_no):
                  width=2,
                  headwidth=5,
                  headlength=5,
-                 color='#392864',
+                 color='#ffffff',
                  alpha=1,
-                 label='Attack Direction',
                  ax=pitch_ax)
 
     pitch.arrows(pass_df['Start X'], pass_df['Start Y'],
