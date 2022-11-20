@@ -530,7 +530,7 @@ def game_events(data, data_info, data_players, match_day):
                                     f"</b> - Minute = <b><font color=#d20614>{game_minute:.0f}</font></b>",
                                     unsafe_allow_html=True)
                         st.pyplot(fig_pass_sequence)
-                        time.sleep(0.1)
+                        time.sleep(0.01)
 
         st.sidebar.header(" ")
 
