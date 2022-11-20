@@ -43,11 +43,13 @@ def game_events(data, data_info, data_players, match_day):
 
     """ Page Configuration """
     if event_analysis == "Passing Sequence":
-        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4, 2.5, 2, 2, 2, 1, 2, 7.5])
-    elif event_analysis != "Starting 11":
-        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([8.5, 2.5, 2, 2, 2, 1, 2, 6.5])
+        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4.25, 2.5, 2, 2, 2, 1, 2, 7.5])
+    elif event_analysis == "Game Events":
+        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([6.6, 2.5, 2, 2, 2, 1, 2, 6.5])
+    elif event_analysis == "Passing Network" or event_analysis == "Passing Direction":
+        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([8.6, 2.5, 2, 2, 2, 1, 2, 6.5])
     else:
-        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4.75, 2.5, 2, 2, 2, 1.5, 2, 6])
+        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4.6, 2.5, 2, 2, 2, 1.5, 2, 6])
 
     with home_col:
         home_logo = Image.open(f'images/{home_team}.png')
@@ -69,6 +71,8 @@ def game_events(data, data_info, data_players, match_day):
         st.title(away_score)
 
     """ Minutes Filter """
+    game_time = "Entire Game"
+    time_filter = [df_game['Minute'].min(), df_game['Minute'].max()]
     if event_analysis == "Game Events" or event_analysis == "Passing Network" or event_analysis == "Passing Direction":
         st.sidebar.header("Time Filter")
         game_time = st.sidebar.selectbox(label="Game Phase",
@@ -105,11 +109,6 @@ def game_events(data, data_info, data_players, match_day):
                 time_filter = [61, 75]
             elif time_option == "76-90+":
                 time_filter = [76, max_minute]
-    else:
-        game_time = "Entire Game"
-        min_minute = df_game['Minute'].min()
-        max_minute = df_game['Minute'].max()
-        time_filter = [min_minute, max_minute]
 
         """ Starting 11 Page """
     if event_analysis == "Starting 11":
@@ -210,7 +209,7 @@ def game_events(data, data_info, data_players, match_day):
         final_period_df = df_game[(df_game['Outcome'] == event_outcome) &
                                   (df_game['Event'] == event_analysis)]
 
-        analysis_col, plot_col, legend_col = st.columns([4, 8, 2])
+        analysis_col, _, plot_col, legend_col = st.columns([3, 0.1, 8, 2])
 
         with legend_col:
             if plot_type == 'Position':
@@ -308,7 +307,7 @@ def game_events(data, data_info, data_players, match_day):
                                     (df_game['Event'] == "Passes")]
 
         starting_players.dropna(inplace=True)
-        analysis_col, plot_col, legend_col = st.columns([4, 8, 2])
+        analysis_col, _, plot_col, legend_col = st.columns([4, 0.25, 8, 2])
         with legend_col:
             network_team = st.selectbox(label='Select Team',
                                         options=[home_team, away_team])
@@ -381,7 +380,7 @@ def game_events(data, data_info, data_players, match_day):
                                     (df_game['Minute'] <= time_filter[1]) &
                                     (df_game['Event'] == "Passes")]
 
-        analysis_col, plot_col, legend_col = st.columns([4, 8, 2])
+        analysis_col, _, plot_col, legend_col = st.columns([4, 0.25, 8, 2])
 
         with legend_col:
             """ Team Selection """
@@ -437,7 +436,7 @@ def game_events(data, data_info, data_players, match_day):
                         f"<b><font color=#d20614>Successful Passes</font></b> of <b>{passing_team}</b> where "
                         f"<b>{success_insight[0]}</b> and <b>{success_insight[1]}</b> while most of the "
                         f"<b><font color=#d20614>Unsuccessful Passes</font></b> of <b>{passing_team}</b> where "
-                        f"<b>{success_insight[0]}</b> and <b>{success_insight[1]}</b>.", unsafe_allow_html=True)
+                        f"<b>{unsuccess_insight[0]}</b> and <b>{unsuccess_insight[1]}</b>.", unsafe_allow_html=True)
             else:
                 st.markdown(f"<h4>No <font color=#d20614>Pass</font> Events between Minute <font color=#d20614>"
                             f"{time_filter[0]}</font></b> and Minute <font color=#d20614>{time_filter[1]}</font></b>."
@@ -452,7 +451,7 @@ def game_events(data, data_info, data_players, match_day):
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
                         f"Passing Sequence</font></h3>", unsafe_allow_html=True)
 
-        legend_col, plot_col, button_col, _ = st.columns([2, 8, 2, 1])
+        legend_col, _, plot_col, button_col, _ = st.columns([2, 0.25, 8, 2, 1])
 
         with legend_col:
             pass_team = st.selectbox(label='Select Team',

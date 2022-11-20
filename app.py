@@ -100,9 +100,12 @@ def main():
         analysis_option = st.sidebar.selectbox("Select Analysis", team_event_menu)
 
         # ##### Opponents vs Other Team Options
-        team_event_menu = ["vs Opponents", "vs Team"]
-        team_analysis = st.sidebar.selectbox(label="Select Analysis",
-                                             options=team_event_menu)
+        if analysis_option != "Passing Network":
+            team_event_menu = ["vs Opponents", "vs Team"]
+            team_analysis = st.sidebar.selectbox(label="Select Analysis",
+                                                 options=team_event_menu)
+        else:
+            team_analysis = "vs Opponents"
 
         if team_analysis == "vs Opponents":
             opponent_sql = favourite_team
