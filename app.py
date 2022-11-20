@@ -1,9 +1,18 @@
+import streamlit as st
 from streamlit_option_menu import option_menu
-from page_scripts.stats_scripts.utilities import *
+from page_scripts.stats_scripts.utilities import info_query, players_info_query, event_query, team_query, team_players_query
 from page_scripts.game_page import game_events
 from page_scripts.team_page import team_events
 from page_scripts.player_page import player_events
+from PIL import Image
 
+# ##### Logo and App Info
+buli_logo = Image.open('images/Bundesliga.png')
+
+st.set_page_config(layout="wide",
+                   page_title="Bundesliga Events App",
+                   page_icon=buli_logo,
+                   initial_sidebar_state="expanded")
 
 # ##### Button Color
 button_color = st.markdown("""
@@ -74,7 +83,15 @@ def main():
         * Select your favourite Player
         * Types of Statistics:
             * Event Level Data per Match Day
+                * Starting 11
+                * Game Events
+                * Passing Network
+                * Passing Direction
+                * Passing Sequence
             * Event Level Data per Team
+                * Game Events
+                * Passing Network
+                * Passing Direction
             * Event Level Data per Player
     """
     elif event_analysis == 'Game':

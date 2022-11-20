@@ -2,15 +2,6 @@ import pandas as pd
 import numpy as np
 from supabase import create_client
 import streamlit as st
-from PIL import Image
-
-# ##### Logo and App Info
-buli_logo = Image.open('images/Bundesliga.png')
-
-st.set_page_config(layout="wide",
-                   page_title="Bundesliga Events App",
-                   page_icon=buli_logo,
-                   initial_sidebar_state="expanded")
 
 
 # ##### Supabase Connection
