@@ -28,6 +28,7 @@ def calculate_distance(x_start, y_start, x_end, y_end):
     return pass_distance
 
 
+@st.cache(show_spinner=False)
 def empty_pitch():
     """ Create Pitch """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')

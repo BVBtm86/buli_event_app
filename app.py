@@ -202,21 +202,22 @@ def main():
         st.sidebar.markdown("<b>Note</b>: Only players with at least <b><font color=#d20614>10%</font></b> of minutes "
                             "played", unsafe_allow_html=True)
 
-    # ##### Footer Page
-    ref_col, fan_club_name, fan_club_logo = st.columns([10, 1, 1])
-    with fan_club_name:
-        st.markdown(f"<p style='text-align: left;'p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: right;'p>Created By: ", unsafe_allow_html=True)
-    with fan_club_logo:
-        bvb_ro_logo = Image.open('images/BVB_Romania.png')
-        st.image(bvb_ro_logo, width=50)
-        st.markdown("@ <b><font color = #d20614 style='text-align: center;'>"
-                    "<a href='mailto:omescu.mario.lucian@gmail.com' style='text-decoration: none; '>"
-                    "Mario Omescu</a></font></b>", unsafe_allow_html=True)
-    with ref_col:
-        st.markdown(
-            f"<b><font color=#d20614>Data Reference:</font></b><ul><li><a href='https://www.whoscored.com' "
-            "style='text-decoration: none; '>Game Event Stats</a></li></ul>", unsafe_allow_html=True)
+    if event_analysis == 'Home':
+        # ##### Footer Page
+        ref_col, fan_club_name, fan_club_logo = st.columns([10, 1, 1])
+        with fan_club_name:
+            st.markdown(f"<p style='text-align: left;'p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align: right;'p>Created By: ", unsafe_allow_html=True)
+        with fan_club_logo:
+            bvb_ro_logo = Image.open('images/BVB_Romania.png')
+            st.image(bvb_ro_logo, width=50)
+            st.markdown("@ <b><font color = #d20614 style='text-align: center;'>"
+                        "<a href='mailto:omescu.mario.lucian@gmail.com' style='text-decoration: none; '>"
+                        "Mario Omescu</a></font></b>", unsafe_allow_html=True)
+        with ref_col:
+            st.markdown(
+                f"<b><font color=#d20614>Data Reference:</font></b><ul><li><a href='https://www.whoscored.com' "
+                "style='text-decoration: none; '>Game Event Stats</a></li></ul>", unsafe_allow_html=True)
 
 
 if __name__ == '__main__':

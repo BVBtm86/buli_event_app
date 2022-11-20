@@ -5,7 +5,7 @@ import streamlit as st
 
 
 # ##### Supabase Connection
-@st.experimental_singleton
+@st.experimental_singleton(show_spinner=False)
 def init_connection():
     url = st.secrets["supabase_url"]
     key = st.secrets["supabase_key"]
@@ -16,7 +16,7 @@ supabase = init_connection()
 
 
 # ##### Supabase Table Queries
-@st.experimental_memo(ttl=600)
+@st.experimental_memo(ttl=600, show_spinner=False)
 def info_query():
     """ Return Game Info """
     game_info_query = supabase.table('game_info_stats').select('*').execute().data
@@ -25,7 +25,7 @@ def info_query():
     return game_info
 
 
-@st.experimental_memo(ttl=600)
+@st.experimental_memo(ttl=600, show_spinner=False)
 def players_info_query(team, match_day):
     """ Return Player Game Info """
     game_player_query_team = supabase.table('game_player_info').select('*'). \
@@ -40,7 +40,7 @@ def players_info_query(team, match_day):
     return game_players_df
 
 
-@st.experimental_memo(ttl=600)
+@st.experimental_memo(ttl=600, show_spinner=False)
 def event_query(team, match_day):
     """ Return Game Events """
     game_team_query = supabase.table('game_events_stats').select('*'). \
@@ -67,7 +67,7 @@ def event_query(team, match_day):
     return game_event_df
 
 
-@st.experimental_memo(ttl=600)
+@st.experimental_memo(ttl=600, show_spinner=False)
 def team_query(team_sql, opponent_sql, period_sql, venue_sql, result_sql):
     """ Return Game Events """
     if team_sql == opponent_sql:
@@ -157,7 +157,7 @@ def team_query(team_sql, opponent_sql, period_sql, venue_sql, result_sql):
     return game_event_df
 
 
-@st.experimental_memo(ttl=600)
+@st.experimental_memo(ttl=600, show_spinner=False)
 def team_players_query(team, match_days):
     """ Return Player Game Info """
     team_player_query = supabase.table('game_player_info').select('*'). \
