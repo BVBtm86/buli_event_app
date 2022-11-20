@@ -1,11 +1,9 @@
 import streamlit as st
+from PIL import Image
 from streamlit_option_menu import option_menu
-from page_scripts.stats_scripts.utilities import info_query, players_info_query, event_query, team_query, \
-    team_players_query
 from page_scripts.game_page import game_events
 from page_scripts.team_page import team_events
 from page_scripts.player_page import player_events
-from PIL import Image
 
 # ##### Logo and App Info
 buli_logo = Image.open('images/Bundesliga.png')
@@ -14,6 +12,9 @@ st.set_page_config(layout="wide",
                    page_title="Bundesliga Events App",
                    page_icon=buli_logo,
                    initial_sidebar_state="expanded")
+
+from page_scripts.stats_scripts.utilities import info_query, players_info_query, event_query, team_query, \
+    team_players_query
 
 # ##### Button Color
 button_color = st.markdown("""
