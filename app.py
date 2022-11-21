@@ -43,7 +43,7 @@ with buli_container:
     with buli_logo_col:
         st.image(buli_logo, use_column_width=True)
     with text_col:
-        st.header("")
+        st.markdown("")
         st.markdown(f"<h1><font color = #d20614>Bundesliga</font> Game Events <font color = #d20614>{season}</font>"
                     f"</h1>", unsafe_allow_html=True)
 
@@ -69,10 +69,13 @@ def main():
         favourite_team = st.sidebar.selectbox(label="Select Favourite Team",
                                               options=buli_teams,
                                               index=buli_teams.index("Borussia Dortmund"))
+        team_logo = Image.open(f'images/{favourite_team}.png')
+        _, img_col, _ = st.sidebar.columns([1, 1, 1])
+        with img_col:
+            st.image(team_logo, width=100, use_column_width=True)
 
     # ##### Info Data
     info_df = info_query()
-    # game_event_df, info_df, info_players_df = read_events_data()
 
     if event_analysis == 'Home':
         st.subheader("")
