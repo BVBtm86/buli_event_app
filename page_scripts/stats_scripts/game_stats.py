@@ -28,32 +28,6 @@ def calculate_distance(x_start, y_start, x_end, y_end):
     return pass_distance
 
 
-@st.cache(show_spinner=False)
-def empty_pitch():
-    """ Create Pitch """
-    pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
-    pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
-    pitch.arrows(0, 102,
-                 15, 102,
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#ffffff',
-                 alpha=1,
-                 ax=pitch_ax)
-
-    pitch.arrows(100, 102,
-                 85, 102,
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#ffffff',
-                 alpha=1,
-                 ax=pitch_ax)
-
-    return pitch_fig
-
-
 def game_staring_11(data, game_teams):
     """ Create Starting 11 Df """
     df_starting_11 = data.copy()
