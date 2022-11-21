@@ -25,8 +25,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
     time_filter = [team_data['Minute'].min(),
                    team_data['Minute'].max()]
 
-    no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
-                team_data[team_data['Team'] == opp_name]['Match Day'].nunique()]
+    if analysis_option == "vs Opponents":
+        no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
+                    team_data[team_data['Team'] == team_name]['Match Day'].nunique()]
+    else:
+        no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
+                    team_data[team_data['Team'] == opp_name]['Match Day'].nunique()]
+
     name_col, _ = st.columns([10, 2])
 
     """ Page Label """

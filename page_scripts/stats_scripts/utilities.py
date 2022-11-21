@@ -166,3 +166,89 @@ def team_players_query(team, match_days):
     team_player_team_df = team_player_team_df[team_player_team_df['Match Day'].isin(match_days)].reset_index(drop=True)
 
     return team_player_team_df
+
+
+@st.experimental_memo(ttl=600, show_spinner=False)
+def avg_keep_players(team, current_match_day):
+    """ Return Player With more than 10% Minute Played """
+    team_player_query = supabase.table('game_player_info').select('*'). \
+        eq('Team', team).execute().data
+    team_players = pd.DataFrame(team_player_query)
+    group_players = team_players.groupby('Player Name')['Minutes Played'].sum()
+
+    min_threshold = current_match_day * 90 * 0.1
+    final_players = list(group_players[group_players > min_threshold].index)
+    final_players.sort()
+
+    return final_players
+
+
+@st.experimental_memo(ttl=600, show_spinner=False)
+def games_player_played(team, player_name):
+    """ Return Player With more than 10% Minute Played """
+    player_query = supabase.table('game_player_info').select('*'). \
+        eq('Team', team).eq("Player Name", player_name).execute().data
+    player_games = pd.DataFrame(player_query)
+
+    match_days_played = player_games['Match Day'].unique()
+
+    return player_games, match_days_played
+
+
+@st.experimental_memo(ttl=600, show_spinner=False)
+def players_query(team_sql, player_name_sql, player_option, match_day_sql, period_sql, venue_sql, result_sql):
+    """ Return Game Events """
+    if player_option == "By Game":
+        player_query = supabase.table('game_events_stats').select('*'). \
+            eq('Team', team_sql).eq("Player Name", player_name_sql).eq("Match Day", match_day_sql).execute().data
+    else:
+        if venue_sql == "All Games":
+            if result_sql == "All Results":
+                player_query = supabase.table('game_events_stats'). \
+                    select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
+                    gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).execute().data
+            else:
+                player_query = supabase.table('game_events_stats'). \
+                    select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
+                    gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).\
+                    eq('Result', result_sql).execute().data
+        else:
+            if result_sql == "All Results":
+                player_query = supabase.table('game_events_stats'). \
+                    select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
+                    gt('Match Day', period_sql[0] - 1).\
+                    lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql).execute().data
+            else:
+                player_query = supabase.table('game_events_stats'). \
+                    select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
+                    gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).\
+                    eq('Venue', venue_sql).eq('Result', result_sql).execute().data
+
+    player_df = pd.DataFrame(player_query)
+
+    return player_df
+
+
+@st.experimental_memo(ttl=600, show_spinner=False)
+def avg_keep_players_opponent(team, current_match_day, match_day, player_name):
+    """ Return Player With more than 10% Minute Played """
+    team_player_query = supabase.table('game_player_info').select('*'). \
+        eq('Team', team).execute().data
+    team_players = pd.DataFrame(team_player_query)
+    group_players = team_players.groupby('Player Name')['Minutes Played'].sum()
+
+    min_threshold = current_match_day * 90 * 0.1
+    season_players = list(group_players[group_players > min_threshold].index)
+
+    if match_day is not None:
+        team_day_query = supabase.table('game_player_info').select('*'). \
+            eq('Team', team).eq("Match Day", match_day).execute().data
+        team_day_df = pd.DataFrame(team_day_query)
+        day_players = list(team_day_df['Player Name'].unique())
+        raw_players = [player for player in season_players if player in day_players]
+    else:
+        raw_players = season_players
+    final_players = [player for player in raw_players if player != player_name]
+    final_players.sort()
+
+    return final_players

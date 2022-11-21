@@ -14,7 +14,7 @@ st.set_page_config(layout="wide",
                    initial_sidebar_state="expanded")
 
 from page_scripts.stats_scripts.utilities import info_query, players_info_query, event_query, team_query, \
-    team_players_query
+    team_players_query, avg_keep_players, games_player_played, players_query
 
 # ##### Button Color
 button_color = st.markdown("""
@@ -98,6 +98,10 @@ def main():
                 * Passing Network
                 * Passing Direction
             * Event Level Data per Player
+                * Game Events
+                * Passing Network
+                * Passing Direction
+                * Passing Sequence
     """
     elif event_analysis == 'Game':
         # ##### Filter by Team and Match Day
@@ -118,10 +122,10 @@ def main():
         # ##### Team Analysis Options
         st.sidebar.header("Analysis Options")
         team_event_menu = ["Game Events", "Passing Network", "Passing Direction"]
-        analysis_option = st.sidebar.selectbox("Select Analysis", team_event_menu)
+        team_analysis_option = st.sidebar.selectbox("Select Analysis", team_event_menu)
 
         # ##### Opponents vs Other Team Options
-        if analysis_option != "Passing Network":
+        if team_analysis_option != "Passing Network":
             team_event_menu = ["vs Opponents", "vs Team"]
             team_analysis = st.sidebar.selectbox(label="Select Analysis",
                                                  options=team_event_menu)
@@ -193,16 +197,112 @@ def main():
 
         team_events(data=team_event_df,
                     players_data=team_players_df,
-                    analysis_option=analysis_option,
+                    analysis_option=team_analysis_option,
                     analysis_team=team_analysis,
                     team_name=favourite_team,
                     opp_name=opponent_sql)
 
     elif event_analysis == 'Player':
-        team_player = st.sidebar.selectbox("Select Player", buli_teams)
-        player_events(player=team_player)
+        max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
+        team_players = avg_keep_players(team=favourite_team,
+                                        current_match_day=max_match_day)
+
+        final_player = st.sidebar.selectbox(label="Select Player",
+                                            options=team_players)
         st.sidebar.markdown("<b>Note</b>: Only players with at least <b><font color=#d20614>10%</font></b> of minutes "
                             "played", unsafe_allow_html=True)
+
+        # ##### Player Analysis Options
+        st.sidebar.header("Analysis Options")
+        player_main_option = st.sidebar.selectbox(label="Main Analysis",
+                                                  options=["Individual", "vs Player"])
+
+        player_event_menu = ["Game Events", "Passing Network", "Passing Direction", "Passing Sequence"]
+        player_analysis_option = st.sidebar.selectbox(label="Analysis Type",
+                                                      options=player_event_menu)
+
+        # ##### Season Filter
+        st.sidebar.header("Game Filter")
+        player_game_filter = st.sidebar.selectbox(label="Game Type Filter",
+                                                  options=["By Game", "By Season"])
+
+        player_games_df, player_days_options = \
+            games_player_played(team=favourite_team,
+                                player_name=final_player)
+        if player_game_filter == "By Game":
+            player_match_day = st.sidebar.selectbox(label="Select Match Day",
+                                                    options=player_days_options)
+            player_period_filter = None
+            player_venue_filter = None
+            player_result_filter = None
+        else:
+            player_match_day = None
+            if player_games_df['Match Day'].max() > 17:
+                player_season_options = ["Entire Season", "1st Half of The Season", "2nd Half of The Season"]
+            else:
+                player_season_options = ["Entire Season", "1st Half of The Season"]
+            player_season_filter = st.sidebar.selectbox(label="Season Filter",
+                                                        options=player_season_options)
+
+            if player_season_filter == "1st Half of The Season":
+                player_period_filter = [1, 17]
+            elif player_season_filter == "2nd Half of The Season":
+                player_period_filter = [18, 34]
+            else:
+                player_period_filter = [1, 34]
+
+            # ##### Venue Filter
+            player_venue_options = \
+                player_games_df[player_games_df['Match Day'].isin(player_period_filter)]['Venue'].unique()
+
+            venue_options = ["All Games"]
+            venue_options.extend([venue for venue in player_venue_options])
+            player_venue_filter = st.sidebar.selectbox(label="Venue Filter",
+                                                       options=venue_options)
+
+            # ##### Result Filter
+            if player_venue_filter == "All Games":
+                player_result_options = \
+                    player_games_df[player_games_df['Match Day'].isin(player_period_filter)]['Result'].unique()
+            else:
+                player_result_options = \
+                    player_games_df[player_games_df['Match Day'].isin(player_period_filter) &
+                                    (player_games_df['Venue'] == player_venue_filter)]['Result'].unique()
+
+            result_options = ["All Results"]
+            result_options.extend([result for result in player_result_options])
+            player_result_filter = st.sidebar.selectbox(label="Result Filter",
+                                                        options=result_options)
+
+        # ##### Team Event Page
+        main_player_event_df = players_query(team_sql=favourite_team,
+                                             player_name_sql=final_player,
+                                             player_option=player_game_filter,
+                                             match_day_sql=player_match_day,
+                                             period_sql=player_period_filter,
+                                             venue_sql=player_venue_filter,
+                                             result_sql=player_result_filter)
+
+        if player_match_day is not None:
+            player_teams_opponent = list(info_df[(info_df['Match Day'] == player_match_day) &
+                                            ((info_df['Team'] == favourite_team) |
+                                            (info_df['Opponent'] == favourite_team))]['Team'].unique())
+        else:
+            player_teams_opponent = buli_teams
+
+        player_events(data=main_player_event_df,
+                      analysis_type=player_main_option,
+                      analysis_option=player_analysis_option,
+                      team_player=favourite_team,
+                      opponent_teams=player_teams_opponent,
+                      player_name=final_player,
+                      player_option_filter=player_game_filter,
+                      match_day_filter=player_match_day,
+                      period_filter=player_period_filter,
+                      venue_filter=player_venue_filter,
+                      result_filter=player_result_filter,
+                      current_match_day=max_match_day,
+                      game_day=player_match_day)
 
     if event_analysis == 'Home':
         # ##### Footer Page
