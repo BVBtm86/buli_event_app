@@ -110,7 +110,6 @@ def main():
         game_event_df = event_query(team=favourite_team, match_day=match_day)
         info_players_df = players_info_query(team=favourite_team, match_day=match_day)
         game_events(data=game_event_df,
-                    data_info=info_df,
                     data_players=info_players_df,
                     match_day=match_day)
 

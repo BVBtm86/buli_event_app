@@ -22,38 +22,12 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
     team_data = data.copy()
     player_data = players_data.copy()
     match_days_filter = team_data['Match Day'].unique()
-    no_games = 0
     time_filter = [team_data['Minute'].min(),
                    team_data['Minute'].max()]
 
-    if analysis_option == "Passing Network":
-        name_col, team_col, _ = st.columns([7.5, 6, 0.5])
-        with team_col:
-            team_logo = Image.open(f'images/{team_name}.png')
-            st.image(team_logo, width=100)
-    elif analysis_option == "Game Events":
-        if analysis_team == "vs Opponents":
-            name_col, team_col, opp_col, _ = st.columns([4.75, 5, 2.75, 0.5])
-            with team_col:
-                team_logo = Image.open(f'images/{team_name}.png')
-                st.image(team_logo, width=100)
-            with opp_col:
-                opp_logo = Image.open(f'images/Bundesliga.png')
-                st.image(opp_logo, width=100)
-            no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
-                        team_data[team_data['Team'] == team_name]['Match Day'].nunique()]
-        else:
-            name_col, team_col, opp_col, _ = st.columns([4.75, 5, 2.75, 0.5])
-            with team_col:
-                team_logo = Image.open(f'images/{team_name}.png')
-                st.image(team_logo, width=100)
-            with opp_col:
-                opp_logo = Image.open(f'images/{opp_name}.png')
-                st.image(opp_logo, width=100)
-            no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
-                        team_data[team_data['Team'] == opp_name]['Match Day'].nunique()]
-    else:
-        name_col, _ = st.columns([10, 2])
+    no_games = [team_data[team_data['Team'] == team_name]['Match Day'].nunique(),
+                team_data[team_data['Team'] == opp_name]['Match Day'].nunique()]
+    name_col, _ = st.columns([10, 2])
 
     """ Page Label """
     if team_name == opp_name:
@@ -61,9 +35,8 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
     else:
         opp_label = opp_name
     with name_col:
-        st.markdown("")
-        st.markdown(f"<h3>{team_name} <font color=#d20614>{analysis_option}</font> vs {opp_label}</h3>",
-                    unsafe_allow_html=True)
+        st.markdown(f"<h3><font color=#d20614>{team_name}</font> vs <font color=#392864>{opp_label}</font> - "
+                    f"{analysis_option}</h3>", unsafe_allow_html=True)
 
     """ Minutes Filter """
     st.sidebar.header("Time Filter")
@@ -174,15 +147,15 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
 
             with plot_1:
                 st.markdown(
-                    f"{team_name} <b>{event_outcome}</b> <b><font color=#d20614>{event_analysis}</font></b> Events"
-                    f" between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>",
-                    unsafe_allow_html=True)
+                    f"<b><font color=#d20614>{team_name}</font></b> <b>{event_outcome}</b> <b><font color=#d20614>"
+                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(event_fig_team)
             with plot_2:
                 st.markdown(
-                    f"{opp_label} <b>{event_outcome}</b> <b><font color=#d20614>{event_analysis}</font></b> Events"
-                    f" between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>",
-                    unsafe_allow_html=True)
+                    f"<b><font color=#392864>{opp_label}</font></b> <b>{event_outcome}</b> <b><font color=#392864>"
+                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(event_fig_opp)
 
             with menu_col:
@@ -255,9 +228,9 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
 
             with plot_col:
                 st.markdown(
-                    f"<b>{team_name}</b> <b><font color=#d20614>Passing Network</font></b> between Minute<b>"
-                    f" {time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> for the <b><font color=#d20614>11"
-                    f"</font></b> Players with most minutes played", unsafe_allow_html=True)
+                    f"<b><font color=#d20614>{team_name}</font></b> <b>Passing Network</b> between Minute <b>"
+                    f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> for the <b><font color=#d20614>11</font>"
+                    f"</b> Players with most minutes played", unsafe_allow_html=True)
                 st.pyplot(fig=network_plot)
 
             with legend_col:
