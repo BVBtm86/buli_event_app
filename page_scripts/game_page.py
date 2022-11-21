@@ -39,8 +39,6 @@ def game_events(data, data_info, data_players, match_day):
     """ Page Configuration """
     if event_analysis == "Passing Sequence":
         tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([4.25, 2.5, 2, 2, 2, 1, 2, 7.5])
-    elif event_analysis == "Game Events":
-        tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([6.6, 2.5, 2, 2, 2, 1, 2, 6.5])
     elif event_analysis == "Passing Network" or event_analysis == "Passing Direction":
         tab_col, _, home_col, hscore_col, sep_col, ascore_col, away_col, _ = st.columns([8.6, 2.5, 2, 2, 2, 1, 2, 6.5])
 
@@ -103,7 +101,6 @@ def game_events(data, data_info, data_players, match_day):
             with h_players_col:
                 h_players = starting_players[starting_players['Team'] == home_team]
                 st.markdown("")
-                # st.markdown(f"<h3><font color=#d20614>{home_team}</font></h3>", unsafe_allow_html=True)
                 home_logo = Image.open(f'images/{home_team}.png')
                 st.image(home_logo, width=100, use_column_width=False)
                 st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
@@ -121,7 +118,6 @@ def game_events(data, data_info, data_players, match_day):
             with a_players_col:
                 a_players = starting_players[starting_players['Team'] == away_team]
                 st.markdown("")
-                # st.markdown(f"<h3><font color=#392864>{away_team}</font></h3>", unsafe_allow_html=True)
                 away_logo = Image.open(f'images/{away_team}.png')
                 st.image(away_logo, width=100, use_column_width=False)
                 st.markdown(f"<h4>Starting 11</h4>", unsafe_allow_html=True)
@@ -142,10 +138,8 @@ def game_events(data, data_info, data_players, match_day):
     elif event_analysis == "Game Events":
         page_container = st.empty()
         with page_container.container():
-            with tab_col:
-                st.subheader("")
-                st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
-                            f"Game Events</font></h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>Game Events"
+                        f"</font></h3>", unsafe_allow_html=True)
 
             """ Event Types """
             st.sidebar.header("Event Filter")
@@ -195,18 +189,18 @@ def game_events(data, data_info, data_players, match_day):
 
             with legend_col:
                 if plot_type == 'Position':
-            #         st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-            #         st.markdown(f"<b><font color=#d20614>{home_team}</font></b>", unsafe_allow_html=True)
-            #         st.markdown(f"<b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
-            #         st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                    st.markdown(f"- <b><font color=#d20614>{home_team}</font></b>", unsafe_allow_html=True)
+                    st.markdown(f"- <b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
+                    st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
                     heatmap_team = None
                 else:
                     heatmap_team = st.selectbox(label='Select Team',
                                                 options=[home_team, away_team])
-            #         if heatmap_team == home_team:
-            #             st.markdown(f"<font color=#d20614>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
-            #         else:
-            #             st.markdown(f"<font color=#392864>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    if heatmap_team == home_team:
+                        st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<- <b>Attack</b></font> Direction", unsafe_allow_html=True)
 
             no_home_events = df_game[df_game['Venue'] == 'Home'].shape[0]
             no_away_events = df_game[df_game['Venue'] == 'Away'].shape[0]
@@ -251,7 +245,6 @@ def game_events(data, data_info, data_players, match_day):
 
             with legend_col:
                 st.header("")
-                st.subheader("")
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{home_team}</font></b> had <b><font color=#d20614>{position_insight[1][0]:.2%}</font>"
