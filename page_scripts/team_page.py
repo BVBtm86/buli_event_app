@@ -126,13 +126,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                           (team_data['Minute'] <= time_filter[1]) &
                                           (team_data['Event'] == event_analysis)]
 
-            team_min_events = final_team_df[final_team_df['Team'] == team_name].value_counts().min()
+            team_min_events = final_team_df[final_team_df['Team'] == team_name].shape[0]
             if analysis_team == "vs Opponents":
-                opp_min_events = final_team_df[final_team_df['Opponent'] == team_name].value_counts().min()
+                opp_min_events = final_team_df[final_team_df['Opponent'] == team_name].shape[0]
             else:
-                opp_min_events = final_team_df[final_team_df['Team'] == opp_name].value_counts().min()
+                opp_min_events = final_team_df[final_team_df['Team'] == opp_name].shape[0]
 
-            if team_min_events < 6 and opp_min_events < 6:
+            if team_min_events < 6 or opp_min_events < 6:
                 plot_type = "Position"
             else:
                 with menu_col:

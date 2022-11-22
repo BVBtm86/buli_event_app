@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
-from page_scripts.stats_scripts.utilities import avg_keep_players_opponent, players_query
-
+from page_scripts.stats_scripts.utilities import avg_keep_players_opponent, players_query, players_jersey_query
+from page_scripts.stats_scripts.player_stats import player_analysis, player_passing_network
 
 # ##### Event Options
 event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
@@ -39,10 +39,11 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
         with name_col:
             st.markdown(f"<h3><font color=#d20614>{player_name}</font> - "
                         f"{analysis_option} <font color=#d20614>{page_season_type}</font></h3>", unsafe_allow_html=True)
-        menu_col, _, plot_col, legend_col = st.columns([2, 0.1, 8, 2])
+        menu_col, _, plot_col_1, legend_col = st.columns([2, 0.1, 8, 0.5])
+        team_player_opponent = None
         compare_player = None
     else:
-        name_col, _ = st.columns([10, 2])
+        name_col, _ = st.columns([10, 0.5])
         menu_col, _, plot_col_1, plot_col_2, legend_col = st.columns([2, 0.1, 4, 4, 2])
         with legend_col:
             team_player_opponent = st.selectbox(label="Select Team",
@@ -56,8 +57,8 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
             compare_player = st.selectbox(label="Select Player",
                                           options=opponent_players)
         with name_col:
-            st.markdown(f"<h3><font color=#392864>{player_name}</font> vs <h3><font color=#d20614>{compare_player} - "
-                        f"</font>{analysis_option} <font color=#d20614>{page_season_type}</font></h3>",
+            st.markdown(f"<h3><font color=#d20614>{player_name}</font> vs <font color=#392864>{compare_player}</font>"
+                        f" {analysis_option} <font color=#d20614>{page_season_type}</font></h3>",
                         unsafe_allow_html=True)
 
     """ Minutes Filter """
@@ -109,14 +110,23 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
     else:
         player_data_opponent = None
 
+    if analysis_type == "Individual":
+        no_games = [player_data['Match Day'].nunique(),
+                    None]
+        no_events = [player_data.shape[0],
+                     None]
+    else:
+        no_games = [player_data['Match Day'].nunique(),
+                    player_data_opponent['Match Day'].nunique()]
+        no_events = [player_data.shape[0],
+                     player_data_opponent.shape[0]]
+
     st.sidebar.header(" ")
 
     """ Game Events Page """
     if analysis_option == "Game Events":
         page_container = st.empty()
         with page_container.container():
-            pass
-
             """ Final Data """
             if game_time == "Entire Game":
                 event_types = player_data[(player_data['Minute'] >= time_filter[0]) &
@@ -145,30 +155,273 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
             """ Game Event Analysis """
             if game_time == "Entire Game":
                 final_player_df = player_data[(player_data['Outcome'] == event_outcome) &
-                                          (player_data['Minute'] >= time_filter[0]) &
-                                          (player_data['Minute'] <= time_filter[1]) &
-                                          (player_data['Event'] == event_analysis)]
+                                              (player_data['Minute'] >= time_filter[0]) &
+                                              (player_data['Minute'] <= time_filter[1]) &
+                                              (player_data['Event'] == event_analysis)]
             else:
                 final_player_df = player_data[(player_data['Period'] == game_time) &
-                                          (player_data['Outcome'] == event_outcome) &
-                                          (player_data['Minute'] >= time_filter[0]) &
-                                          (player_data['Minute'] <= time_filter[1]) &
-                                          (player_data['Event'] == event_analysis)]
+                                              (player_data['Outcome'] == event_outcome) &
+                                              (player_data['Minute'] >= time_filter[0]) &
+                                              (player_data['Minute'] <= time_filter[1]) &
+                                              (player_data['Event'] == event_analysis)]
 
+            if player_data_opponent is not None:
+                if game_time == "Entire Game":
+                    final_opponent_df = player_data_opponent[(player_data_opponent['Outcome'] == event_outcome) &
+                                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                                             (player_data_opponent['Event'] == event_analysis)]
+                else:
+                    final_opponent_df = player_data_opponent[(player_data_opponent['Period'] == game_time) &
+                                                             (player_data_opponent['Outcome'] == event_outcome) &
+                                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                                             (player_data_opponent['Event'] == event_analysis)]
+            else:
+                final_opponent_df = None
+
+            if player_data_opponent is None:
+                opponent_min_events = 6
+            else:
+                opponent_min_events = final_opponent_df.shape[0]
             player_min_events = final_player_df.shape[0]
-            if player_min_events < 6:
+            if player_min_events < 6 or opponent_min_events < 6:
                 plot_type = "Position"
             else:
                 with menu_col:
                     plot_type = st.selectbox(label="Plot Type",
                                              options=['Heatmap', 'Position'])
 
+            player_fig, opponent_fig, player_stats, opponent_stats, position_plot, direction_plot, \
+            position_stats, direction_stats = \
+                player_analysis(data_player=final_player_df,
+                                player_data_opponent=final_opponent_df,
+                                player_options=player_option_filter,
+                                analysis_type=analysis_type,
+                                plot_type=plot_type,
+                                no_games=no_games,
+                                no_events=no_events,
+                                event_outcome=event_outcome_label,
+                                event_type=event_analysis,
+                                player_names=[player_name,
+                                              compare_player])
+
+            with plot_col_1:
+                st.markdown(
+                    f"<b><font color=#d20614>{player_name}</font></b> <b>{event_outcome}</b> <b><font color=#d20614>"
+                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{time_filter[1]}</b>", unsafe_allow_html=True)
+                st.pyplot(player_fig)
+            with menu_col:
+                if player_option_filter == "By Game":
+                    st.table(player_stats.style.format(subset=['No Events'], formatter="{:.0f}").format(
+                        subset=['% of Events'], formatter="{:.2%}").apply(
+                        lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                   for i in range(len(x))], axis=0).apply(
+                        lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
+                                   for i in range(len(x))], axis=0).set_table_styles(
+                        [{'selector': 'th',
+                          'props': [('background-color', '#d20614'),
+                                    ('color', '#ffffff')]}]))
+                else:
+                    st.table(player_stats.style.format(subset=['No Events'], formatter="{:.0f}").format(
+                        subset=['Avg Events/G'], formatter="{:.2f}").apply(
+                        lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                   for i in range(len(x))], axis=0).apply(
+                        lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
+                                   for i in range(len(x))], axis=0).set_table_styles(
+                        [{'selector': 'th',
+                          'props': [('background-color', '#d20614'),
+                                    ('color', '#ffffff')]}]))
+            if opponent_fig is not None:
+                with plot_col_2:
+                    st.markdown(
+                        f"<b><font color=#392864>{compare_player}</font></b> <b>{event_outcome}</b> <b>"
+                        f"<font color=#392864>{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b>"
+                        f" and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
+                    st.pyplot(opponent_fig)
+                with legend_col:
+                    if player_option_filter == "By Game":
+                        st.table(opponent_stats.style.format(subset=['No Events'], formatter="{:.0f}").format(
+                            subset=['% of Events'], formatter="{:.2%}").apply(
+                            lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                       for i in range(len(x))], axis=0).apply(
+                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
+                                       for i in range(len(x))], axis=0).set_table_styles(
+                            [{'selector': 'th',
+                              'props': [('background-color', '#392864'),
+                                        ('color', '#ffffff')]}]))
+                    else:
+                        st.table(opponent_stats.style.format(subset=['No Events'], formatter="{:.0f}").format(
+                            subset=['Avg Events/G'], formatter="{:.2f}").apply(
+                            lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                       for i in range(len(x))], axis=0).apply(
+                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
+                                       for i in range(len(x))], axis=0).set_table_styles(
+                            [{'selector': 'th',
+                              'props': [('background-color', '#392864'),
+                                        ('color', '#ffffff')]}]))
+
+            with menu_col:
+                st.subheader("")
+                st.markdown(
+                    f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
+                    f"#d20614>{player_name}</font></b> had <b><font color=#d20614>{position_stats[1][0]:.2%}</font>"
+                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_stats[0][0]}"
+                    f"</b> of the Pitch and <b><font color=#d20614>{direction_stats[1][0]:.2%}</font></b> in "
+                    f" <b>{direction_stats[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
+                if analysis_type == "vs Player":
+                    with legend_col:
+                        st.markdown(
+                            f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
+                            f"<font color=#392864>{compare_player}</font></b> had <b><font color=#392864>"
+                            f"{position_stats[1][1]:.2%}</font></b> <b>{event_outcome_label}</b> <b>{event_analysis}"
+                            f"</b> in <b>{position_stats[0][1]}</b> of the Pitch and <b><font color=#392864>"
+                            f"{direction_stats[1][1]:.2%}</font></b> in <b>{direction_stats[0][1]}</b> of the Pitch.",
+                            unsafe_allow_html=True)
+
+            with st.expander("Display Position and Direction Plots"):
+                info_col, pos_col, _, dir_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
+                with info_col:
+                    st.subheader("")
+                    st.header("")
+                    st.subheader("")
+                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                    st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
+                    if analysis_type == "vs Player":
+                        st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
+                with pos_col:
+                    st.plotly_chart(position_plot, config=config, use_container_width=True)
+                with dir_col:
+                    st.plotly_chart(direction_plot, config=config, use_container_width=True)
+
         st.sidebar.header(" ")
 
     elif analysis_option == "Passing Network":
         page_container = st.empty()
         with page_container.container():
-            pass
+            """ Final Data """
+            if game_time == "Entire Game":
+                final_player_pass_df = player_data[(player_data['Outcome'] == 'Successful') &
+                                                   (player_data['Minute'] >= time_filter[0]) &
+                                                   (player_data['Minute'] <= time_filter[1]) &
+                                                   (player_data['Event'] == "Passes")]
+            else:
+                final_player_pass_df = player_data[(player_data['Period'] == game_time) &
+                                                   (player_data['Outcome'] == 'Successful') &
+                                                   (player_data['Minute'] >= time_filter[0]) &
+                                                   (player_data['Minute'] <= time_filter[1]) &
+                                                   (player_data['Event'] == "Passes")]
+
+            if player_data_opponent is not None:
+                if game_time == "Entire Game":
+                    final_opponent_pass_df = \
+                        player_data_opponent[(player_data_opponent['Outcome'] == "Successful") &
+                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                             (player_data_opponent['Event'] == "Passes")]
+                else:
+                    final_opponent_pass_df = \
+                        player_data_opponent[(player_data_opponent['Period'] == game_time) &
+                                             (player_data_opponent['Outcome'] == "Successful") &
+                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                             (player_data_opponent['Event'] == "Passes")]
+            else:
+                final_opponent_pass_df = None
+
+            jersey_team, jersey_opp = players_jersey_query(team=team_player,
+                                                           team_opp=team_player_opponent)
+
+            player_network_fig, opponent_network_fig, team_network_players, player_top_fig, \
+            opponent_network_players, opponent_top_fig, player_tab, opponent_tab = \
+                player_passing_network(data_player=final_player_pass_df,
+                                       data_opponent=final_opponent_pass_df,
+                                       analysis_type=analysis_type,
+                                       players_jersey=jersey_team,
+                                       opponent_jersey=jersey_opp)
+
+            with plot_col_1:
+                st.markdown(
+                    f"<b><font color=#d20614>{player_name}</font></b> <b>Passing Network</b> between Minute <b>"
+                    f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
+                st.pyplot(player_network_fig)
+            if analysis_type == "vs Player":
+                with plot_col_2:
+                    st.markdown(
+                        f"<b><font color=#392864>{compare_player}</font></b> <b>Passing Network</b> between Minute <b>"
+                        f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
+                    st.pyplot(opponent_network_fig)
+
+            with menu_col:
+                st.table(player_tab.style.format(subset=['No of Passes'], formatter="{:.0f}").apply(
+                    lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                               for i in range(len(x))], axis=0).apply(
+                    lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
+                               for i in range(len(x))], axis=0).set_table_styles(
+                    [{'selector': 'th',
+                      'props': [('background-color', '#d20614'),
+                                ('color', '#ffffff')]}]))
+                st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+                for i in range(len(team_network_players) + 1):
+                    if i == 0:
+                        team_player_name = team_network_players.loc[i, 'Player Name_x']
+                        jersey_no = team_network_players.loc[i, 'Jersey No_x']
+                    else:
+                        team_player_name = team_network_players.loc[i - 1, 'Player Name_y']
+                        jersey_no = team_network_players.loc[i - 1, 'Jersey No_y']
+                    if jersey_no < 10:
+                        st.markdown(f"<b>0{int(jersey_no)}<b> - <font color=#d20614>{team_player_name}</font>",
+                                    unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<b>{int(jersey_no)}<b> - <font color=#d20614>{team_player_name}</font>",
+                                    unsafe_allow_html=True)
+                st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+
+            with st.expander("Display Network Stats Plot"):
+                if analysis_type == "vs Player":
+                    info_col, network_plot_1, _, network_plot_2, _ = st.columns([2, 5, 0.5, 5, 0.5])
+                else:
+                    info_col, network_plot_1, _ = st.columns([2, 10, 1])
+                with info_col:
+                    st.subheader("")
+                    st.header("")
+                    st.subheader("")
+                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                    st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
+                with network_plot_1:
+                    st.plotly_chart(player_top_fig, config=config, use_container_width=True)
+                if analysis_type == "vs Player":
+                    with info_col:
+                        st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
+                    with network_plot_2:
+                        st.plotly_chart(opponent_top_fig, config=config, use_container_width=True)
+                    with legend_col:
+                        st.table(opponent_tab.style.format(subset=['No of Passes'], formatter="{:.0f}").apply(
+                            lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                       for i in range(len(x))], axis=0).apply(
+                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
+                                       for i in range(len(x))], axis=0).set_table_styles(
+                            [{'selector': 'th',
+                              'props': [('background-color', '#392864'),
+                                        ('color', '#ffffff')]}]))
+                        st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+                        for i in range(len(opponent_network_players) + 1):
+                            if i == 0:
+                                team_opponent_name = opponent_network_players.loc[i, 'Player Name_x']
+                                jersey_opponent_no = opponent_network_players.loc[i, 'Jersey No_x']
+                            else:
+                                team_opponent_name = opponent_network_players.loc[i - 1, 'Player Name_y']
+                                jersey_opponent_no = opponent_network_players.loc[i - 1, 'Jersey No_y']
+                            if jersey_no < 10:
+                                st.markdown(
+                                    f"<b>0{int(jersey_opponent_no)}<b> - <font color=#392864>{team_opponent_name}"
+                                    f"</font>", unsafe_allow_html=True)
+                            else:
+                                st.markdown(
+                                    f"<b>{int(jersey_opponent_no)}<b> - <font color=#392864>{team_opponent_name}"
+                                    f"</font>", unsafe_allow_html=True)
+                        st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
 
         st.sidebar.header(" ")
 
@@ -188,5 +441,3 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
 
     else:
         pass
-
-

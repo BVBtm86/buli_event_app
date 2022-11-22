@@ -231,7 +231,8 @@ def main():
                                 player_name=final_player)
         if player_game_filter == "By Game":
             player_match_day = st.sidebar.selectbox(label="Select Match Day",
-                                                    options=player_days_options)
+                                                    options=player_days_options,
+                                                    index=list(player_days_options).index(player_days_options[-1]))
             player_period_filter = None
             player_venue_filter = None
             player_result_filter = None
@@ -285,8 +286,8 @@ def main():
 
         if player_match_day is not None:
             player_teams_opponent = list(info_df[(info_df['Match Day'] == player_match_day) &
-                                            ((info_df['Team'] == favourite_team) |
-                                            (info_df['Opponent'] == favourite_team))]['Team'].unique())
+                                                 ((info_df['Team'] == favourite_team) |
+                                                  (info_df['Opponent'] == favourite_team))]['Team'].unique())
         else:
             player_teams_opponent = buli_teams
 

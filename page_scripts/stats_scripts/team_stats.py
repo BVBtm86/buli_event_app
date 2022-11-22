@@ -252,7 +252,7 @@ def team_passing_network(data, network_players):
                  alpha=1,
                  ax=pitch_ax)
 
-    if pass_df.shape[0] > 1:
+    if pass_df.shape[0] > 0:
         pitch.lines(network_df['Start X'], network_df['Start Y'],
                     network_df['End X'], network_df['End Y'],
                     lw=network_df['Pass Width'],
@@ -289,7 +289,7 @@ def team_passing_network(data, network_players):
 
     top_passes_df = top_passes_df.sort_values(by='Event', ascending=True)
     top_passes_df.rename(columns={"Event": "No of Passes"}, inplace=True)
-    if pass_df.shape[0] > 1:
+    if pass_df.shape[0] > 0:
         top_fig = px.bar(top_passes_df,
                          x='No of Passes',
                          y='Player Combo',
@@ -304,7 +304,7 @@ def team_passing_network(data, network_players):
         top_fig = None
 
     """ Network Insights """
-    if pass_df.shape[0] > 1:
+    if pass_df.shape[0] > 0:
         top_player_df = \
             pd.DataFrame(top_passes_df.groupby('Player Name')['Player Name'].count() +
                          top_passes_df.groupby('Player Name Receiver')['Player Name Receiver'].count(), columns=["No"])

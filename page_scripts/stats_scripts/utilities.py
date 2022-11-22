@@ -252,3 +252,26 @@ def avg_keep_players_opponent(team, current_match_day, match_day, player_name):
     final_players.sort()
 
     return final_players
+
+
+@st.experimental_memo(ttl=600, show_spinner=False)
+def players_jersey_query(team, team_opp):
+    """ Return Player Jersey """
+    players_jerseys = supabase.table('game_player_info').select('*'). \
+        eq('Team', team).execute().data
+    players_jerseys_df = pd.DataFrame(players_jerseys)
+    players_jerseys_df = players_jerseys_df[['Player Name', 'Jersey No']].reset_index(drop=True)
+    players_jerseys_df.drop_duplicates(inplace=True)
+    players_jerseys_df.reset_index(drop=True, inplace=True)
+
+    if team_opp is not None:
+        opponent_jerseys = supabase.table('game_player_info').select('*'). \
+            eq('Team', team_opp).execute().data
+        opponent_jerseys_df = pd.DataFrame(opponent_jerseys)
+        opponent_jerseys_df = opponent_jerseys_df[['Player Name', 'Jersey No']].reset_index(drop=True)
+        opponent_jerseys_df.drop_duplicates(inplace=True)
+        opponent_jerseys_df.reset_index(drop=True, inplace=True)
+    else:
+        opponent_jerseys_df = None
+
+    return players_jerseys_df, opponent_jerseys_df
