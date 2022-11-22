@@ -24,7 +24,7 @@ def game_events(data, data_players, match_day):
 
     # ##### Event Analysis Options
     st.sidebar.header("Analysis Options")
-    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Direction", "Passing Sequence"]
+    game_event_menu = ["Starting 11", "Game Events", "Passing Network", "Passing Distance", "Passing Sequence"]
     event_analysis = st.sidebar.selectbox("Select Analysis", game_event_menu)
 
     """ Create Game Df """
@@ -335,7 +335,7 @@ def game_events(data, data_players, match_day):
             st.sidebar.header(" ")
 
         """ Passing Direction Page """
-    elif event_analysis == "Passing Direction":
+    elif event_analysis == "Passing Distance":
         page_container = st.empty()
         with page_container.container():
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>Passing Direction"

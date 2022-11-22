@@ -272,7 +272,7 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                         f"<font color=#d20614>{int(top_insights[2])}</font></b> out of <b><font color=#d20614>"
                         f"{top_insights[0]}</font></b>  Successful Passes between Players.", unsafe_allow_html=True)
 
-    elif analysis_option == "Passing Direction":
+    elif analysis_option == "Passing Distance":
         page_container = st.empty()
         with page_container.container():
             info_team, plot_team, _, info_opp, plot_opp, _ = st.columns([3, 3, 0.5, 3, 3, 1])

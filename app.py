@@ -101,7 +101,6 @@ def main():
                 * Game Events
                 * Passing Network
                 * Passing Direction
-                * Passing Sequence
     """
     elif event_analysis == 'Game':
         # ##### Filter by Team and Match Day
@@ -121,7 +120,7 @@ def main():
 
         # ##### Team Analysis Options
         st.sidebar.header("Analysis Options")
-        team_event_menu = ["Game Events", "Passing Network", "Passing Direction"]
+        team_event_menu = ["Game Events", "Passing Network", "Passing Distance"]
         team_analysis_option = st.sidebar.selectbox("Select Analysis", team_event_menu)
 
         # ##### Opponents vs Other Team Options
@@ -217,7 +216,7 @@ def main():
         player_main_option = st.sidebar.selectbox(label="Main Analysis",
                                                   options=["Individual", "vs Player"])
 
-        player_event_menu = ["Game Events", "Passing Network", "Passing Direction", "Passing Sequence"]
+        player_event_menu = ["Game Events", "Passing Network", "Passing Distance"]
         player_analysis_option = st.sidebar.selectbox(label="Analysis Type",
                                                       options=player_event_menu)
 
