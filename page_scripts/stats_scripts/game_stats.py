@@ -166,35 +166,41 @@ def game_analysis(data, data_period, game_teams, plot_type, event_type, event_ou
     direction_stats['Direction'] = pd.Categorical(direction_stats['Direction'], ['Right Side', 'Mid Side', 'Left Side'])
     direction_stats = direction_stats.sort_values(by=['Team', 'Direction'])
 
-    position_fig = px.bar(position_stats,
-                          x='Position',
-                          y='%',
-                          color='Team',
-                          color_discrete_map={game_teams[0]: team_colors[0],
-                                              game_teams[1]: team_colors[1]},
-                          height=350,
-                          barmode='group',
-                          title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
-                          hover_data={'%': ':.2%'})
-    position_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    position_fig.layout.yaxis.tickformat = ',.0%'
+    if position_stats.shape[0] > 0:
+        position_fig = px.bar(position_stats,
+                              x='Position',
+                              y='%',
+                              color='Team',
+                              color_discrete_map={game_teams[0]: team_colors[0],
+                                                  game_teams[1]: team_colors[1]},
+                              height=350,
+                              barmode='group',
+                              title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
+                              hover_data={'%': ':.2%'})
+        position_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        position_fig.layout.yaxis.tickformat = ',.0%'
+    else:
+        position_fig = None
 
-    direction_fig = px.bar(direction_stats,
-                           x='Direction',
-                           y='%',
-                           color='Team',
-                           color_discrete_map={game_teams[0]: team_colors[0],
-                                               game_teams[1]: team_colors[1]},
-                           height=350,
-                           barmode='group',
-                           title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
-                           hover_data={'%': ':.2%'})
-    direction_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    direction_fig.layout.yaxis.tickformat = ',.0%'
+    if direction_stats.shape[0] > 0:
+        direction_fig = px.bar(direction_stats,
+                               x='Direction',
+                               y='%',
+                               color='Team',
+                               color_discrete_map={game_teams[0]: team_colors[0],
+                                                   game_teams[1]: team_colors[1]},
+                               height=350,
+                               barmode='group',
+                               title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
+                               hover_data={'%': ':.2%'})
+        direction_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        direction_fig.layout.yaxis.tickformat = ',.0%'
+    else:
+        direction_fig = None
 
     """ No Events Plots """
     no_home_type = home_stats.shape[0]
@@ -289,6 +295,12 @@ def game_passing_network(data, starting_players, plot_team):
     network_df.iloc[:, -4:] = np.round(network_df.iloc[:, -4:], 2)
     network_df.rename(columns={'Start X_x': 'Start X', 'Start Y_x': 'Start Y',
                                'Start X_y': 'End X', 'Start Y_y': 'End Y'}, inplace=True)
+    if avg_df.shape[0] == 1:
+        add_receiver_player = pass_df[['Player Name Receiver', 'End X', 'End Y']]
+        add_receiver_player.columns = ['Player Name', 'Start X', 'Start Y']
+        add_receiver_player['No Passes'] = 1
+        avg_df = pd.concat([avg_df, add_receiver_player]).reset_index(drop=True)
+        network_df[['End X', 'End Y']] = add_receiver_player[['Start X', 'Start Y']]
 
     avg_df = pd.merge(left=avg_df,
                       right=starting_df[['Player Name', 'Jersey No']],
@@ -370,7 +382,7 @@ def game_passing_network(data, starting_players, plot_team):
         top_fig = px.bar(top_passes_df,
                          x='No of Passes',
                          y='Player Combo',
-                         height=600,
+                         height=500,
                          title=f"Top {top_passes_df.shape[0]} <b>Successful Passes</b> between Players")
         top_fig.update_layout({
             "plot_bgcolor": "rgba(0, 0, 0, 0)"},
@@ -381,7 +393,7 @@ def game_passing_network(data, starting_players, plot_team):
         top_fig = None
 
     """ Network Insights """
-    if pass_df.shape[0] > 0:
+    if pass_df.shape[0] > 1:
         top_player_df = \
             pd.DataFrame(top_passes_df.groupby('Player Name')['Player Name'].count() +
                          top_passes_df.groupby('Player Name Receiver')['Player Name Receiver'].count(), columns=["No"])

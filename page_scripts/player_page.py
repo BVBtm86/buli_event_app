@@ -16,7 +16,7 @@ event_options_sequence = ['Goal', 'Unsuccessful Pass', 'Shot Saved', 'Shot Misse
                           'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
 
 
-def player_events(data, analysis_type, analysis_option, team_player, opponent_teams, player_name,
+def player_events(data, analysis_option, analysis_type, team_player, opponent_teams, player_name,
                   player_option_filter, match_day_filter, period_filter, venue_filter, result_filter,
                   current_match_day, game_day):
     """ Page Configuration """
@@ -34,7 +34,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
         page_season_type = f"Match Day {game_day}"
         compare_player_filter = "By Game"
 
-    if analysis_type == "Individual":
+    if analysis_option == "Individual":
         name_col, _ = st.columns([10, 2])
         with name_col:
             st.markdown(f"<h3><font color=#d20614>{player_name}</font> - {analysis_option} <font color=#d20614>"
@@ -111,7 +111,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
     else:
         player_data_opponent = None
 
-    if analysis_type == "Individual":
+    if analysis_option == "Individual":
         no_games = [player_data['Match Day'].nunique(),
                     None]
         no_events = [player_data.shape[0],
@@ -125,7 +125,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
     st.sidebar.header(" ")
 
     """ Game Events Page """
-    if analysis_option == "Game Events":
+    if analysis_type == "Game Events":
         page_container = st.empty()
         with page_container.container():
             """ Final Data """
@@ -198,7 +198,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                 player_analysis(data_player=final_player_df,
                                 player_data_opponent=final_opponent_df,
                                 player_options=player_option_filter,
-                                analysis_type=analysis_type,
+                                analysis_option=analysis_option,
                                 plot_type=plot_type,
                                 no_games=no_games,
                                 no_events=no_events,
@@ -271,7 +271,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                     f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_stats[0][0]}"
                     f"</b> of the Pitch and <b><font color=#d20614>{direction_stats[1][0]:.2%}</font></b> in "
                     f" <b>{direction_stats[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
-                if analysis_type == "vs Player":
+                if analysis_option == "vs Player":
                     with legend_col:
                         st.markdown(
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
@@ -289,7 +289,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                     st.subheader("")
                     st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
                     st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
-                    if analysis_type == "vs Player":
+                    if analysis_option == "vs Player":
                         st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
                 with pos_col:
                     st.plotly_chart(position_plot, config=config, use_container_width=True)
@@ -299,7 +299,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
         st.sidebar.header(" ")
 
         """ Passing Network Page """
-    elif analysis_option == "Passing Network":
+    elif analysis_type == "Passing Network":
         page_container = st.empty()
         with page_container.container():
             """ Final Data """
@@ -339,7 +339,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                 opponent_network_players, opponent_top_fig, player_tab, opponent_tab = \
                 player_passing_network(data_player=final_player_pass_df,
                                        data_opponent=final_opponent_pass_df,
-                                       analysis_type=analysis_type,
+                                       analysis_option=analysis_option,
                                        players_jersey=jersey_team,
                                        opponent_jersey=jersey_opp)
 
@@ -348,7 +348,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                     f"<b><font color=#d20614>{player_name}</font></b> <b>Passing Network</b> between Minute <b>"
                     f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(player_network_fig)
-            if analysis_type == "vs Player":
+            if analysis_option == "vs Player":
                 with plot_col_2:
                     st.markdown(
                         f"<b><font color=#392864>{compare_player}</font></b> <b>Passing Network</b> between Minute <b>"
@@ -381,7 +381,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                 st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
 
             with st.expander("Display Network Stats Plot"):
-                if analysis_type == "vs Player":
+                if analysis_option == "vs Player":
                     info_col, network_plot_1, _, network_plot_2, _ = st.columns([2, 5, 0.5, 5, 0.5])
                 else:
                     info_col, network_plot_1, _ = st.columns([2, 10, 1])
@@ -393,7 +393,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                     st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
                 with network_plot_1:
                     st.plotly_chart(player_top_fig, config=config, use_container_width=True)
-                if analysis_type == "vs Player":
+                if analysis_option == "vs Player":
                     with info_col:
                         st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
                     with network_plot_2:
@@ -428,7 +428,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
         st.sidebar.header(" ")
 
         """ Passing Direction Page """
-    elif analysis_option == "Passing Distance":
+    elif analysis_type == "Passing Distance":
         page_container = st.empty()
         with page_container.container():
             """ Final Data """
@@ -465,7 +465,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
             player_pass_fig, opponent_pass_fig, player_insights, opponent_insights = \
                 player_passing_direction(data_player=final_player_pass_df,
                                          data_opponent=final_opponent_pass_df,
-                                         analysis_type=analysis_type,
+                                         analysis_option=analysis_option,
                                          analysis_games=game_day,
                                          pass_length=player_pass_length)
             with plot_col_1:
@@ -518,7 +518,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                         f"<b>No</b> <b><font color=#d20614>Unsuccessful Passes</font></b>.",
                         unsafe_allow_html=True)
 
-            if analysis_type == "vs Player":
+            if analysis_option == "vs Player":
                 with plot_col_2:
                     if game_day is not None:
                         st.markdown(
@@ -562,7 +562,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
 
             if game_day is not None:
                 with st.expander("Display Distance Plot"):
-                    if analysis_type == "Individual":
+                    if analysis_option == "Individual":
                         info_col, player_col, _ = st.columns([2, 10, 0.5])
                     else:
                         info_col, player_col, _, opp_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
@@ -576,7 +576,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                     with player_col:
                         st.plotly_chart(player_insights[1], config=config, use_container_width=True)
                         st.plotly_chart(player_insights[2], config=config, use_container_width=True)
-                    if analysis_type == "vs Player":
+                    if analysis_option == "vs Player":
                         with opp_col:
                             st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
                             st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
@@ -584,7 +584,7 @@ def player_events(data, analysis_type, analysis_option, team_player, opponent_te
                 with plot_col_1:
                     st.plotly_chart(player_insights[1], config=config, use_container_width=True)
                     st.plotly_chart(player_insights[2], config=config, use_container_width=True)
-                if analysis_type == "vs Player":
+                if analysis_option == "vs Player":
                     with plot_col_2:
                         st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
                         st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)

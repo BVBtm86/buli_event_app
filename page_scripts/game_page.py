@@ -35,47 +35,7 @@ def game_events(data, data_players, match_day):
     home_team = df_game[df_game['Venue'] == 'Home']['Team'].unique()[0]
     away_team = df_game[df_game['Venue'] == 'Away']['Team'].unique()[0]
 
-    """ Minutes Filter """
-    game_time = "Entire Game"
-    time_filter = [df_game['Minute'].min(), df_game['Minute'].max()]
-    if event_analysis == "Game Events" or event_analysis == "Passing Network" or event_analysis == "Passing Direction":
-        st.sidebar.header("Time Filter")
-        game_time = st.sidebar.selectbox(label="Game Phase",
-                                         options=["Entire Game", "1st Half", "2nd Half"])
-
-        if game_time == "Entire Game":
-            min_minute = df_game['Minute'].min()
-            max_minute = df_game['Minute'].max()
-
-            time_filter = st.sidebar.select_slider(label="Select Period",
-                                                   options=[i for i in range(min_minute, max_minute + 1)],
-                                                   value=(min_minute, max_minute))
-        elif game_time == "1st Half":
-            time_option = st.sidebar.selectbox(label="Select Period",
-                                               options=["Entire Period", "1-15", '16-30', '31-45+'])
-            max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
-            if time_option == "Entire Period":
-                time_filter = [0, max_minute]
-            elif time_option == "1-15":
-                time_filter = [0, 15]
-            elif time_option == "16-30":
-                time_filter = [16, 30]
-            elif time_option == "31-45+":
-                time_filter = [31, max_minute]
-        else:
-            time_option = st.sidebar.selectbox(label="Select Period",
-                                               options=["Entire Period", "46-60", '61-75', '76-90+'])
-            max_minute = df_game[df_game['Period'] == '2nd Half']['Minute'].max()
-            if time_option == "Entire Period":
-                time_filter = [45, max_minute]
-            elif time_option == "46-60":
-                time_filter = [45, 60]
-            elif time_option == "61-75":
-                time_filter = [61, 75]
-            elif time_option == "76-90+":
-                time_filter = [76, max_minute]
-
-        """ Starting 11 Page """
+    """ Starting 11 Page """
     if event_analysis == "Starting 11":
         page_container = st.empty()
         with page_container.container():
@@ -136,21 +96,11 @@ def game_events(data, data_players, match_day):
 
             """ Event Types """
             st.sidebar.header("Event Filter")
-            if game_time == "Entire Game":
-                event_types = df_game[(df_game['Minute'] >= time_filter[0]) &
-                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
-            else:
-                event_types = df_game[(df_game['Period'] == game_time) &
-                                      (df_game['Minute'] >= time_filter[0]) &
-                                      (df_game['Minute'] <= time_filter[1])]['Event'].unique()
-
+            event_types = df_game['Event'].unique()
             final_event_types = [event for event in event_options if event in event_types]
             event_analysis = st.sidebar.selectbox(label="Event Type",
                                                   options=final_event_types)
-
-            event_outcome_type = df_game[(df_game['Minute'] >= time_filter[0]) &
-                                         (df_game['Minute'] <= time_filter[1]) &
-                                         (df_game['Event'] == event_analysis)]['Outcome'].unique()
+            event_outcome_type = df_game[(df_game['Event'] == event_analysis)]['Outcome'].unique()
             if len(event_outcome_type) == 2:
                 event_outcome = st.sidebar.selectbox(label="Event Outcome",
                                                      options=["Successful", "Unsuccessful"])
@@ -161,6 +111,44 @@ def game_events(data, data_players, match_day):
 
             plot_type = st.sidebar.selectbox(label="Plot Type",
                                              options=['Position', 'Heatmap'])
+
+            """ Minutes Filter """
+            time_filter = [df_game['Minute'].min(), df_game['Minute'].max()]
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = df_game['Minute'].min()
+                max_minute = df_game['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = df_game[df_game['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
 
             """ Game Event Analysis """
             if game_time == "Entire Game":
@@ -183,8 +171,8 @@ def game_events(data, data_players, match_day):
             with legend_col:
                 if plot_type == 'Position':
                     st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-                    st.markdown(f"- <b><font color=#d20614>{home_team}</font></b>", unsafe_allow_html=True)
-                    st.markdown(f"- <b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
+                    st.markdown(f"<b><font color=#d20614>{home_team}</font></b>", unsafe_allow_html=True)
+                    st.markdown(f"<b><font color=#392864>{away_team}</font></b>", unsafe_allow_html=True)
                     st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
                     heatmap_team = None
                 else:
@@ -214,17 +202,23 @@ def game_events(data, data_players, match_day):
             with analysis_col:
                 st.table(data=events_data.style.format(subset=['% of Total Events'],
                                                        formatter="{:.2%}").apply(
-                    lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
-                               for i in range(len(x))], axis=0).apply(
-                    lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
-                               for i in range(len(x))], axis=0).set_table_styles(
+                    lambda x: ['background: #ffffff' if _ % 2 == 0 else 'background: #e7e7e7'
+                               for _ in range(len(x))], axis=0).apply(
+                    lambda x: ['color: #1e1e1e' if _ % 2 == 0 else 'color: #d20614'
+                               for _ in range(len(x))], axis=0).set_table_styles(
                     [{'selector': 'th',
                       'props': [('background-color', '#d20614'),
                                 ('color', '#ffffff')]}]))
 
             with analysis_col:
-                st.plotly_chart(position_plot, config=config, use_container_width=True)
-                st.plotly_chart(direction_plot, config=config, use_container_width=True)
+                if position_plot is not None:
+                    st.plotly_chart(position_plot, config=config, use_container_width=True)
+                else:
+                    st.markdown(f"<h5>The are 0 <font color=#d20614>{event_analysis}</font> Events between Minute "
+                                f"<font color=#d20614>{time_filter[0]}</font> and Minute "
+                                f"<font color=#d20614>{time_filter[1]}</font></h5>.", unsafe_allow_html=True)
+                if direction_plot is not None:
+                    st.plotly_chart(direction_plot, config=config, use_container_width=True)
 
             with plot_col:
                 st.markdown(f"<b>{event_outcome}</b> <b><font color=#d20614>{event_analysis}</font></b> Events between "
@@ -237,7 +231,8 @@ def game_events(data, data_players, match_day):
                                 f"Heatmap Plot</h3>", unsafe_allow_html=True)
 
             with legend_col:
-                st.header("")
+                st.markdown("")
+                st.markdown(f"<b>Match Day <font color=#d20614>{match_day}</font> Insights", unsafe_allow_html=True)
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{home_team}</font></b> had <b><font color=#d20614>{position_insight[1][0]:.2%}</font>"
@@ -253,8 +248,8 @@ def game_events(data, data_players, match_day):
                 st.markdown(
                     f"<b><font color=#d20614>{home_team}</font></b> had <b><font color=#d20614>"
                     f"{period_insight[1][0]:.2%}</font></b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in"
-                    f" the <b>{period_insight[0][0]}</b> of the Game while <b><font color=#d20614>{away_team}"
-                    f"</font></b> had <b><font color=#d20614>{period_insight[1][1]:.2%}</font></b> <b>"
+                    f" the <b>{period_insight[0][0]}</b> of the Game while <b><font color=#392864>{away_team}"
+                    f"</font></b> had <b><font color=#392864>{period_insight[1][1]:.2%}</font></b> <b>"
                     f"{event_outcome_label}</b> <b>{event_analysis}</b> in the <b>{period_insight[0][1]}</b> of the"
                     f" Game.", unsafe_allow_html=True)
 
@@ -266,6 +261,45 @@ def game_events(data, data_players, match_day):
         with page_container.container():
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>"
                         f"Passing Network</font></h3>", unsafe_allow_html=True)
+
+            """ Minutes Filter """
+            time_filter = [df_game['Minute'].min(), df_game['Minute'].max()]
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = df_game['Minute'].min()
+                max_minute = df_game['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = df_game[df_game['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
+
             if game_time == "Entire Game":
                 final_pass_df = df_game[(df_game['Outcome'] == 'Successful') &
                                         (df_game['Minute'] >= time_filter[0]) &
@@ -296,9 +330,9 @@ def game_events(data, data_players, match_day):
                         st.markdown(f"<b>{jersey_no}<b> - <font color=#d20614>{player_name}</font>",
                                     unsafe_allow_html=True)
                 if network_team == home_team:
-                    st.markdown(f"<font color=#d20614>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    st.markdown(f"-> <b>Attack</b> Direction", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<font color=#392864>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    st.markdown(f"<- <b>Attack</b> Direction", unsafe_allow_html=True)
 
             network_plot, top_plot, starting_insights, top_insights = \
                 game_passing_network(data=final_pass_df,
@@ -313,24 +347,26 @@ def game_events(data, data_players, match_day):
 
             with analysis_col:
                 if top_plot is None:
-                    st.markdown("")
                     st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the "
                                 f"Starting 11 Players of <b>{network_team}</b>, there were less then <b>"
                                 f"<font color=#d20614>2</font></b> Successful Passes.", unsafe_allow_html=True)
                 else:
                     st.plotly_chart(top_plot, config=config, use_container_width=True)
-
-                    st.markdown(
-                        f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Starting "
-                        f"11 Players of <b>{network_team}</b>, <b><font color=#d20614>{starting_insights[0]}</font></b>"
-                        f" was involved in most of the <b>Passes</b> with <b><font color=#d20614>"
-                        f"{int(starting_insights[1])}</font></b>.", unsafe_allow_html=True)
-                    st.markdown(
-                        f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Top "
-                        f"<b>{top_insights[0]}</b> Successful Passes between Players of <b>{network_team}</b>, we see "
-                        f"that <b><font color=#d20614>{top_insights[1]}</font></b> was involved in most of them with "
-                        f"<b><font color=#d20614>{int(top_insights[2])}</font></b> out of <b><font color=#d20614>"
-                        f"{top_insights[0]}</font></b>  Successful Passes between Players.", unsafe_allow_html=True)
+                    if starting_insights[0] is not None and starting_insights[1] is not None:
+                        st.markdown(f"<b>Match Day <font color=#d20614>{match_day}</font> Insights",
+                                    unsafe_allow_html=True)
+                        st.markdown(
+                            f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the "
+                            f"Starting 11 Players of <b>{network_team}</b>, <b><font color=#d20614>"
+                            f"{starting_insights[0]}</font></b> was involved in most of the <b>Passes</b> with <b>"
+                            f"<font color=#d20614>{int(starting_insights[1])}</font></b>.", unsafe_allow_html=True)
+                        st.markdown(
+                            f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Top "
+                            f"<b>{top_insights[0]}</b> Successful Passes between Players of <b>{network_team}</b>, "
+                            f"we see that <b><font color=#d20614>{top_insights[1]}</font></b> was involved in most of "
+                            f"them with <b><font color=#d20614>{int(top_insights[2])}</font></b> out of <b>"
+                            f"<font color=#d20614>{top_insights[0]}</font></b>  Successful Passes between Players.",
+                            unsafe_allow_html=True)
 
             st.sidebar.header(" ")
 
@@ -340,6 +376,44 @@ def game_events(data, data_players, match_day):
         with page_container.container():
             st.markdown(f"<h3>Match Day <font color=#d20614>{match_day}</font> - <font color=#d20614>Passing Direction"
                         f"</font></h3>", unsafe_allow_html=True)
+
+            """ Minutes Filter """
+            time_filter = [df_game['Minute'].min(), df_game['Minute'].max()]
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = df_game['Minute'].min()
+                max_minute = df_game['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = df_game[df_game['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = df_game[df_game['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
 
             """ Final Df """
             if game_time == "Entire Game":
@@ -383,18 +457,18 @@ def game_events(data, data_players, match_day):
                 st.markdown(f"<font color=#d20614><b>Long</b></font> Passes = <b>25+</b> meters",
                             unsafe_allow_html=True)
                 if passing_team == home_team:
-                    st.markdown(f"<font color=#d20614>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    st.markdown(f"-> <b>Attack</b> Direction", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<font color=#392864>-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                    st.markdown(f"<- <b>Attack</b> Direction", unsafe_allow_html=True)
 
             with analysis_col:
                 if passes_stats is not None:
                     st.table(data=passes_stats.style.format(subset=['% of Events'],
                                                             formatter="{:.2%}").apply(
-                        lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
-                                   for i in range(len(x))], axis=0).apply(
-                        lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
-                                   for i in range(len(x))], axis=0).set_table_styles(
+                        lambda x: ['background: #ffffff' if _ % 2 == 0 else 'background: #e7e7e7'
+                                   for _ in range(len(x))], axis=0).apply(
+                        lambda x: ['color: #1e1e1e' if _ % 2 == 0 else 'color: #d20614'
+                                   for _ in range(len(x))], axis=0).set_table_styles(
                         [{'selector': 'th',
                           'props': [('background-color', '#d20614'),
                                     ('color', '#ffffff')]}]))
@@ -403,7 +477,8 @@ def game_events(data, data_players, match_day):
                     st.plotly_chart(direction_plot, config=config, use_container_width=True)
 
                     with legend_col:
-                        st.markdown("")
+                        st.markdown(f"<b>Match Day <font color=#d20614>{match_day}</font> Insights",
+                                    unsafe_allow_html=True)
                         if success_insight is not None and unsuccess_insight is not None:
                             st.markdown(
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
@@ -494,10 +569,10 @@ def game_events(data, data_players, match_day):
 
             with button_col:
                 st.table(data=sequence_stats.style.format(subset=['#'], formatter="{:.2f}").apply(
-                    lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
-                               for i in range(len(x))], axis=0).apply(
-                    lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
-                               for i in range(len(x))], axis=0).set_table_styles(
+                    lambda x: ['background: #ffffff' if _ % 2 == 0 else 'background: #e7e7e7'
+                               for _ in range(len(x))], axis=0).apply(
+                    lambda x: ['color: #1e1e1e' if _ % 2 == 0 else 'color: #d20614'
+                               for _ in range(len(x))], axis=0).set_table_styles(
                     [{'selector': 'th',
                       'props': [('background-color', '#d20614'),
                                 ('color', '#ffffff')]}]))
@@ -510,7 +585,7 @@ def game_events(data, data_players, match_day):
                                                                             players_info=data_players,
                                                                             event_no=i)
                         st.markdown(f"<b><font color=#d20614>{sequence_team}</font> <b>Sequence Pass No:</b> <b>"
-                                    f"<font color=#d20614>{no_event_sequence}</font></b> with Event Outcome <b>"
+                                    f"<font color=#d20614>{no_close_event}</font></b> with Event Outcome <b>"
                                     f"<font color=#d20614>{close_event}</font></b> - Minute = <b><font color=#d20614>"
                                     f"{game_minute:.0f}</font></b>", unsafe_allow_html=True)
                         st.pyplot(fig_pass_sequence)

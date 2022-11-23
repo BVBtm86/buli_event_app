@@ -15,7 +15,7 @@ event_options_sequence = ['Goal', 'Unsuccessful Pass', 'Shot Saved', 'Shot Misse
                           'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
 
 
-def team_events(data, players_data, analysis_option, analysis_team, team_name, opp_name):
+def team_events(data, players_data, analysis_option, analysis_team, team_name, opp_name, page_filter):
     """ Page Configuration """
     config = {'displayModeBar': False}
 
@@ -79,6 +79,19 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
             time_filter = [61, 75]
         elif time_option == "76-90+":
             time_filter = [76, max_minute]
+
+    if page_filter[0] == "Entire Season":
+        season_name = ""
+    else:
+        season_name = f"<font color=#d20614>{page_filter[0]}</font> - "
+    if page_filter[1] == "All Games":
+        venue_name = ""
+    else:
+        venue_name = f"<font color=#d20614>{page_filter[1]}</font> - "
+    if page_filter[2] == "All Results":
+        result_name = ""
+    else:
+        result_name = f"<font color=#d20614>{page_filter[2]}</font> - "
 
     st.sidebar.header(" ")
 
@@ -173,8 +186,14 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                     [{'selector': 'th',
                       'props': [('background-color', '#d20614'),
                                 ('color', '#ffffff')]}]))
-
+                st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
                 st.subheader("")
+                if season_name == "" and venue_name == "" and result_name == "":
+                    st.markdown(f"<b>Season <font color=#d20614>2022-2023</font> Games Insights</b>",
+                                unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                unsafe_allow_html=True)
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{team_name}</font></b> had <b><font color=#d20614>{position_stats[1][0]:.2%}</font>"
@@ -259,7 +278,12 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                 f"<font color=#d20614>2</font></b> Successful Passes.", unsafe_allow_html=True)
                 else:
                     st.plotly_chart(top_plot, config=config, use_container_width=True)
-
+                    if season_name == "" and venue_name == "" and result_name == "":
+                        st.markdown(f"<b>Season <font color=#d20614>2022-2023</font> Games Insights</b>",
+                                    unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                    unsafe_allow_html=True)
                     st.markdown(
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the Starting "
                         f"11 Players of <b>{team_name}</b>, <b><font color=#d20614>{starting_insights[0]}</font></b>"
@@ -314,7 +338,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                     st.markdown("<h4>Legend</h4>", unsafe_allow_html=True)
                     st.markdown(f"- <font color=#d20614><b>Successful</b></font> Passes", unsafe_allow_html=True)
                     st.markdown(f"- <font color=#392864><b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
-                    st.header("")
+                    st.markdown("")
+                    if season_name == "" and venue_name == "" and result_name == "":
+                        st.markdown(f"<b>Season <font color=#d20614>2022-2023</font> Games Insights</b>",
+                                    unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                    unsafe_allow_html=True)
                     st.markdown(
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of the "
                         f"<b><font color=#d20614>Successful Passes</font></b> of <b>{team_name}</b> where "
@@ -355,7 +385,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                         st.markdown("<h4>Legend</h4>", unsafe_allow_html=True)
                         st.markdown(f"- <font color=#d20614><b>Successful</b></font> Passes", unsafe_allow_html=True)
                         st.markdown(f"- <font color=#392864><b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
-                        st.header("")
+                        st.markdown("")
+                        if season_name == "" and venue_name == "" and result_name == "":
+                            st.markdown(f"<b>Season <font color=#d20614>2022-2023</font> Games Insights</b>",
+                                        unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                        unsafe_allow_html=True)
                         st.markdown(
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of the "
                             f"<b><font color=#d20614>Successful Passes</font></b> of <b>{opp_label}</b> where "

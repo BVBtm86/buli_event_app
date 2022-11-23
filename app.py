@@ -80,13 +80,13 @@ def main():
     if event_analysis == 'Home':
         st.subheader("")
         st.markdown(
-            'A statistical application that allows the user to analyse Bundesliga Game Events on Team and Player '
-            'level.<br> <br> <b>App Features</b>', unsafe_allow_html=True)
+            'A Statistical application that allows the user to analyse Bundesliga Game Events Data for Team and Players'
+            '.<br> <br> <b>App Features</b>', unsafe_allow_html=True)
 
         """ 
         * Select your favourite team
         * Select your favourite Player
-        * Types of Statistics:
+        * Types of Analysis:
             * Event Level Data per Match Day
                 * Starting 11
                 * Game Events
@@ -199,7 +199,8 @@ def main():
                     analysis_option=team_analysis_option,
                     analysis_team=team_analysis,
                     team_name=favourite_team,
-                    opp_name=opponent_sql)
+                    opp_name=opponent_sql,
+                    page_filter=[season_filter, venue_filter, result_filter])
 
     elif event_analysis == 'Player':
         max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
@@ -213,12 +214,12 @@ def main():
 
         # ##### Player Analysis Options
         st.sidebar.header("Analysis Options")
-        player_main_option = st.sidebar.selectbox(label="Main Analysis",
-                                                  options=["Individual", "vs Player"])
+        player_analysis_option = st.sidebar.selectbox(label="Main Analysis",
+                                                      options=["Individual", "vs Player"])
 
         player_event_menu = ["Game Events", "Passing Network", "Passing Distance"]
-        player_analysis_option = st.sidebar.selectbox(label="Analysis Type",
-                                                      options=player_event_menu)
+        player_analysis_type = st.sidebar.selectbox(label="Analysis Type",
+                                                    options=player_event_menu)
 
         # ##### Season Filter
         st.sidebar.header("Game Filter")
@@ -291,8 +292,8 @@ def main():
             player_teams_opponent = buli_teams
 
         player_events(data=main_player_event_df,
-                      analysis_type=player_main_option,
                       analysis_option=player_analysis_option,
+                      analysis_type=player_analysis_type,
                       team_player=favourite_team,
                       opponent_teams=player_teams_opponent,
                       player_name=final_player,

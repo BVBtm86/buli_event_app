@@ -14,11 +14,11 @@ def calculate_distance(x_start, y_start, x_end, y_end):
     return pass_distance
 
 
-def player_analysis(data_player, player_data_opponent, player_options, analysis_type,
+def player_analysis(data_player, player_data_opponent, player_options, analysis_option,
                     no_games, no_events, plot_type, event_outcome, event_type, player_names):
     """ Final Player Data """
     final_df_player = data_player.copy()
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         final_df_opponent = player_data_opponent.copy()
         color_plotly = {player_names[0]: team_colors[0], player_names[1]: team_colors[1]}
     else:
@@ -26,7 +26,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
         color_plotly = {player_names[0]: team_colors[0]}
 
     """ Plot Events """
-    if analysis_type == "Individual":
+    if analysis_option == "Individual":
         pitch_player_team = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
         x_arrows = [0, 102]
         y_arrows = [15, 102]
@@ -66,7 +66,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
                     n_levels=10,
                     cmap='plasma')
 
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         pitch_player_opp = VerticalPitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
         pitch_fig_player_opp, pitch_ax_opp = pitch_player_opp.draw(figsize=(10, 10))
         pitch_player_opp.arrows(0, 102,
@@ -110,7 +110,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
         player_stats.columns = ['Player Name', 'No Events', 'Avg Events/G']
     player_stats.set_index("Player Name", inplace=True)
 
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         if player_options == "By Game":
             opponent_stats = pd.DataFrame([player_names[1],
                                            final_df_opponent.shape[0],
@@ -131,14 +131,14 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
     final_df_player['Direction'] = final_df_player['Start Y'].apply(lambda x: 'Right Side' if x < 30 else (
         'Mid Side' if 30 <= x < 70 else 'Left Side'))
 
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         final_df_opponent['Position'] = final_df_opponent['Start X'].apply(lambda x: 'Def Third' if x < 34 else (
             'Mid Third' if 34 <= x < 68 else 'Att Third'))
         final_df_opponent['Direction'] = final_df_opponent['Start Y'].apply(lambda x: 'Right Side' if x < 30 else (
             'Mid Side' if 30 <= x < 70 else 'Left Side'))
 
     """ Analysis Plots """
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         analysis_events = \
             pd.concat([final_df_player[['Player Name', 'Position', 'Direction']],
                        final_df_opponent[['Player Name', 'Position', 'Direction']]], axis=0)
@@ -148,7 +148,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
     position_stats = pd.DataFrame(analysis_events.groupby('Player Name')['Position'].value_counts(normalize=True))
     position_stats.columns = ['%']
     position_stats.reset_index(inplace=True)
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         position_stats['Player Name'] = \
             pd.Categorical(position_stats['Player Name'], [player_names[0], player_names[1]])
     position_stats['Position'] = pd.Categorical(position_stats['Position'], ['Def Third', 'Mid Third', 'Att Third'])
@@ -157,7 +157,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
     direction_stats = pd.DataFrame(analysis_events.groupby('Player Name')['Direction'].value_counts(normalize=True))
     direction_stats.columns = ['%']
     direction_stats.reset_index(inplace=True)
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         direction_stats['Player Name'] = \
             pd.Categorical(direction_stats['Player Name'], [player_names[0], player_names[1]])
     direction_stats['Direction'] = pd.Categorical(direction_stats['Direction'], ['Right Side', 'Mid Side', 'Left Side'])
@@ -228,14 +228,14 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
         players_position_fig, players_direction_fig, position_insight, direction_insight
 
 
-def player_passing_network(data_player, data_opponent, analysis_type, players_jersey, opponent_jersey):
+def player_passing_network(data_player, data_opponent, analysis_option, players_jersey, opponent_jersey):
     """ Create Pass Df """
     pass_player_df = data_player.copy()
     jersey_player_df = players_jersey.copy()
     pass_player_df = \
         pass_player_df[pass_player_df['Player Name'] != pass_player_df['Player Name Receiver']].reset_index(drop=True)
 
-    if analysis_type == "vs Player":
+    if analysis_option == "vs Player":
         pass_opponent_df = data_opponent.copy()
         pass_opponent_df = \
             pass_opponent_df[pass_opponent_df['Player Name'] != pass_opponent_df['Player Name Receiver']].reset_index(
@@ -296,7 +296,7 @@ def player_passing_network(data_player, data_opponent, analysis_type, players_je
     c_transparency = player_network_df['Event'] / player_network_df['Event'].max()
     c_transparency = (c_transparency * (1 - min_transparency)) + min_transparency
     color[:, 3] = c_transparency
-    if analysis_type == "Individual":
+    if analysis_option == "Individual":
         player_pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
         x_arrows = [0, 102]
         y_arrows = [15, 102]
@@ -500,7 +500,7 @@ def player_passing_network(data_player, data_opponent, analysis_type, players_je
         top_opponent_player_df, opponent_top_fig, player_stats_df, opponents_stats_df
 
 
-def player_passing_direction(data_player, data_opponent, analysis_type, analysis_games, pass_length):
+def player_passing_direction(data_player, data_opponent, analysis_option, analysis_games, pass_length):
     """ Pass Player Direction Analysis """
     player_pass_df = data_player.copy()
     if player_pass_df.shape[0] > 0:
@@ -524,7 +524,7 @@ def player_passing_direction(data_player, data_opponent, analysis_type, analysis
         player_pass_successful = player_pass_df[(player_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
         player_pass_unsuccessful = player_pass_df[(player_pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
 
-    if analysis_type == "Individual":
+    if analysis_option == "Individual":
         player_pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
         x_arrows = [0, 102]
         y_arrows = [15, 102]
