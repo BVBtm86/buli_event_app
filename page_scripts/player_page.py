@@ -18,8 +18,9 @@ event_options_sequence = ['Goal', 'Unsuccessful Pass', 'Shot Saved', 'Shot Misse
 
 def player_events(data, analysis_option, analysis_type, team_player, opponent_teams, player_name,
                   player_option_filter, match_day_filter, period_filter, venue_filter, result_filter,
-                  current_match_day, game_day):
+                  current_match_day):
     """ Page Configuration """
+    season_year = "2022-2023"
     config = {'displayModeBar': False}
 
     player_data = data.copy()
@@ -27,11 +28,11 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                    player_data['Minute'].max()]
 
     ''' Add vs Player Data'''
-    if game_day is None:
+    if match_day_filter is None:
         page_season_type = f"Season"
         compare_player_filter = "By Season"
     else:
-        page_season_type = f"Match Day {game_day}"
+        page_season_type = f"Match Day {match_day_filter}"
         compare_player_filter = "By Game"
 
     if analysis_option == "Individual":
@@ -53,7 +54,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
 
             opponent_players = avg_keep_players_opponent(team=team_player_opponent,
                                                          current_match_day=current_match_day,
-                                                         match_day=game_day,
+                                                         match_day=match_day_filter,
                                                          player_name=player_name)
             compare_player = st.selectbox(label="Select Player",
                                           options=opponent_players)
@@ -123,6 +124,29 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                      player_data_opponent.shape[0]]
 
     st.sidebar.header(" ")
+
+    ''' Insight Label '''
+    if match_day_filter is not None:
+        match_day_name = match_day_filter
+        season_name = ""
+        venue_name = ""
+        result_name = ""
+    else:
+        if period_filter == [1, 34]:
+            season_name = ""
+        elif period_filter == [1, 17]:
+            season_name = f"<font color=#d20614>1st Half of The Season</font> - "
+        else:
+            season_name = f"<font color=#d20614>2nd Half of The Season</font> - "
+        if venue_filter == "All Games":
+            venue_name = ""
+        else:
+            venue_name = f"<font color=#d20614>{venue_filter}</font> - "
+        if result_filter == "All Results":
+            result_name = ""
+        else:
+            result_name = f"<font color=#d20614>{result_filter}</font> - "
+        match_day_name = ""
 
     """ Game Events Page """
     if analysis_type == "Game Events":
@@ -264,7 +288,16 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                         ('color', '#ffffff')]}]))
 
             with menu_col:
-                st.subheader("")
+                if match_day_name != "":
+                    st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
+                                unsafe_allow_html=True)
+                else:
+                    if season_name == "" and venue_name == "" and result_name == "":
+                        st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
+                                    unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                    unsafe_allow_html=True)
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{player_name}</font></b> had <b><font color=#d20614>{position_stats[1][0]:.2%}</font>"
@@ -273,6 +306,16 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                     f" <b>{direction_stats[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
                 if analysis_option == "vs Player":
                     with legend_col:
+                        if match_day_name != "":
+                            st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
+                                        unsafe_allow_html=True)
+                        else:
+                            if season_name == "" and venue_name == "" and result_name == "":
+                                st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
+                                            unsafe_allow_html=True)
+                            else:
+                                st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                            unsafe_allow_html=True)
                         st.markdown(
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                             f"<font color=#392864>{compare_player}</font></b> had <b><font color=#392864>"
@@ -341,7 +384,8 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                        data_opponent=final_opponent_pass_df,
                                        analysis_option=analysis_option,
                                        players_jersey=jersey_team,
-                                       opponent_jersey=jersey_opp)
+                                       opponent_jersey=jersey_opp,
+                                       player_names=[player_name, compare_player])
 
             with plot_col_1:
                 st.markdown(
@@ -364,21 +408,54 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                     [{'selector': 'th',
                       'props': [('background-color', '#d20614'),
                                 ('color', '#ffffff')]}]))
-                st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
-                for i in range(len(team_network_players) + 1):
-                    if i == 0:
-                        team_player_name = team_network_players.loc[i, 'Player Name_x']
-                        jersey_player_no = team_network_players.loc[i, 'Jersey No_x']
-                    else:
-                        team_player_name = team_network_players.loc[i - 1, 'Player Name_y']
-                        jersey_player_no = team_network_players.loc[i - 1, 'Jersey No_y']
-                    if jersey_player_no < 10:
-                        st.markdown(f"<b>0{int(jersey_player_no)}<b> - <font color=#d20614>{team_player_name}</font>",
-                                    unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<b>{int(jersey_player_no)}<b> - <font color=#d20614>{team_player_name}</font>",
-                                    unsafe_allow_html=True)
-                st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+
+                if team_network_players.shape[0] > 0:
+                    st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+                    for i in range(len(team_network_players) + 1):
+                        if i == 0:
+                            team_player_name = team_network_players.loc[i, 'Player Name_x']
+                            jersey_player_no = team_network_players.loc[i, 'Jersey No_x']
+                        else:
+                            team_player_name = team_network_players.loc[i - 1, 'Player Name_y']
+                            jersey_player_no = team_network_players.loc[i - 1, 'Jersey No_y']
+                        if jersey_player_no < 10:
+                            st.markdown(f"<b>0{int(jersey_player_no)}<b> - <font color=#d20614>{team_player_name}"
+                                        f"</font>", unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<b>{int(jersey_player_no)}<b> - <font color=#d20614>{team_player_name}"
+                                        f"</font>", unsafe_allow_html=True)
+                    st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+
+            if analysis_option == "vs Player":
+                with legend_col:
+                    st.table(opponent_tab.style.format(subset=['No of Passes'], formatter="{:.0f}").apply(
+                        lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
+                                   for i in range(len(x))], axis=0).apply(
+                        lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
+                                   for i in range(len(x))], axis=0).set_table_styles(
+                        [{'selector': 'th',
+                          'props': [('background-color', '#392864'),
+                                    ('color', '#ffffff')]}]))
+
+                if opponent_network_players is not None:
+                    with legend_col:
+                        st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
+                        for i in range(len(opponent_network_players) + 1):
+                            if i == 0:
+                                team_opponent_name = opponent_network_players.loc[i, 'Player Name_x']
+                                jersey_opponent_no = opponent_network_players.loc[i, 'Jersey No_x']
+                            else:
+                                team_opponent_name = opponent_network_players.loc[i - 1, 'Player Name_y']
+                                jersey_opponent_no = opponent_network_players.loc[i - 1, 'Jersey No_y']
+                            if jersey_opponent_no < 10:
+                                st.markdown(
+                                    f"<b>0{int(jersey_opponent_no)}<b> - <font color=#392864>"
+                                    f"{team_opponent_name}</font>", unsafe_allow_html=True)
+                            else:
+                                st.markdown(
+                                    f"<b>{int(jersey_opponent_no)}<b> - <font color=#392864>"
+                                    f"{team_opponent_name}</font>", unsafe_allow_html=True)
+                        st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
 
             with st.expander("Display Network Stats Plot"):
                 if analysis_option == "vs Player":
@@ -392,38 +469,15 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                     st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
                     st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
                 with network_plot_1:
-                    st.plotly_chart(player_top_fig, config=config, use_container_width=True)
+                    if player_top_fig is not None:
+                        st.plotly_chart(player_top_fig, config=config, use_container_width=True)
+
                 if analysis_option == "vs Player":
                     with info_col:
                         st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
                     with network_plot_2:
-                        st.plotly_chart(opponent_top_fig, config=config, use_container_width=True)
-                    with legend_col:
-                        st.table(opponent_tab.style.format(subset=['No of Passes'], formatter="{:.0f}").apply(
-                            lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
-                                       for i in range(len(x))], axis=0).apply(
-                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
-                                       for i in range(len(x))], axis=0).set_table_styles(
-                            [{'selector': 'th',
-                              'props': [('background-color', '#392864'),
-                                        ('color', '#ffffff')]}]))
-                        st.markdown(f"<h4>Players</h4>", unsafe_allow_html=True)
-                        for i in range(len(opponent_network_players) + 1):
-                            if i == 0:
-                                team_opponent_name = opponent_network_players.loc[i, 'Player Name_x']
-                                jersey_opponent_no = opponent_network_players.loc[i, 'Jersey No_x']
-                            else:
-                                team_opponent_name = opponent_network_players.loc[i - 1, 'Player Name_y']
-                                jersey_opponent_no = opponent_network_players.loc[i - 1, 'Jersey No_y']
-                            if jersey_opponent_no < 10:
-                                st.markdown(
-                                    f"<b>0{int(jersey_opponent_no)}<b> - <font color=#392864>{team_opponent_name}"
-                                    f"</font>", unsafe_allow_html=True)
-                            else:
-                                st.markdown(
-                                    f"<b>{int(jersey_opponent_no)}<b> - <font color=#392864>{team_opponent_name}"
-                                    f"</font>", unsafe_allow_html=True)
-                        st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
+                        if opponent_top_fig is not None:
+                            st.plotly_chart(opponent_top_fig, config=config, use_container_width=True)
 
         st.sidebar.header(" ")
 
@@ -459,17 +513,22 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
 
             """ Pass Length """
             with menu_col:
-                player_pass_length = st.selectbox(label="Length of Passes",
-                                                  options=['All', "Short Passes", "Medium Passes", "Long Passes"])
+                if match_day_filter is not None \
+                        and (final_player_pass_df.shape[0] > 0 or final_opponent_pass_df.shape[0] > 0):
+                    player_pass_length = st.selectbox(label="Length of Passes",
+                                                      options=['All', "Short Passes", "Medium Passes", "Long Passes"])
+                else:
+                    player_pass_length = "All"
 
             player_pass_fig, opponent_pass_fig, player_insights, opponent_insights = \
                 player_passing_direction(data_player=final_player_pass_df,
                                          data_opponent=final_opponent_pass_df,
                                          analysis_option=analysis_option,
-                                         analysis_games=game_day,
-                                         pass_length=player_pass_length)
+                                         analysis_games=match_day_filter,
+                                         pass_length=player_pass_length,
+                                         player_names=[player_name, compare_player])
             with plot_col_1:
-                if game_day is not None:
+                if match_day_filter is not None:
                     st.markdown(
                         f"<b>{player_name}</b> <b><font color=#d20614>Passing Events</font></b> between Minute<b> "
                         f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
@@ -493,8 +552,20 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                             unsafe_allow_html=True)
                 st.markdown(f"<font color=#d20614><b>Long</b></font> Passes = <b>25+</b> meters",
                             unsafe_allow_html=True)
-                st.markdown(f"-> <font color=#d20614><b>Attack</b></font> Direction", unsafe_allow_html=True)
-                st.header("")
+                if match_day_name != "":
+                    st.markdown(f"-> <b>Attack</b> Direction", unsafe_allow_html=True)
+                st.markdown("")
+                if final_player_pass_df.shape[0] > 0:
+                    if match_day_name != "":
+                        st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
+                                    unsafe_allow_html=True)
+                    else:
+                        if season_name == "" and venue_name == "" and result_name == "":
+                            st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
+                                        unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                        unsafe_allow_html=True)
                 if player_insights[3] is not None and player_insights[4] is not None:
                     st.markdown(
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
@@ -520,7 +591,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
 
             if analysis_option == "vs Player":
                 with plot_col_2:
-                    if game_day is not None:
+                    if match_day_filter is not None:
                         st.markdown(
                             f"<b>{compare_player}</b> <b><font color=#d20614>Passing Events</font></b> between Minute"
                             f"<b> {time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
@@ -535,8 +606,18 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                             [{'selector': 'th',
                               'props': [('background-color', '#d20614'),
                                         ('color', '#ffffff')]}]))
-                        st.header("")
-                        st.header("")
+                        st.markdown("")
+                        if final_opponent_pass_df is not None and final_opponent_pass_df.shape[0] > 0:
+                            if match_day_name != "":
+                                st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
+                                            unsafe_allow_html=True)
+                            else:
+                                if season_name == "" and venue_name == "" and result_name == "":
+                                    st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>"
+                                                f"", unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
+                                                unsafe_allow_html=True)
                         if opponent_insights[3] is not None and opponent_insights[4] is not None:
                             st.markdown(
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most "
@@ -560,7 +641,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                 f"{opponent_insights[3][1]}</b> while there were <b>No</b> <b><font color=#d20614>"
                                 f"Unsuccessful Passes</font></b>.", unsafe_allow_html=True)
 
-            if game_day is not None:
+            if match_day_filter is not None:
                 with st.expander("Display Distance Plot"):
                     if analysis_option == "Individual":
                         info_col, player_col, _ = st.columns([2, 10, 0.5])
@@ -574,20 +655,24 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                         st.markdown(f"<font color=#d20614><b>Successful</b></font> Passes", unsafe_allow_html=True)
                         st.markdown(f"<font color=#392864><b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
                     with player_col:
-                        st.plotly_chart(player_insights[1], config=config, use_container_width=True)
-                        st.plotly_chart(player_insights[2], config=config, use_container_width=True)
+                        if player_insights[1] is not None:
+                            st.plotly_chart(player_insights[1], config=config, use_container_width=True)
+                            st.plotly_chart(player_insights[2], config=config, use_container_width=True)
                     if analysis_option == "vs Player":
                         with opp_col:
-                            st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
-                            st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
+                            if opponent_insights[1] is not None:
+                                st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
+                                st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
             else:
                 with plot_col_1:
-                    st.plotly_chart(player_insights[1], config=config, use_container_width=True)
-                    st.plotly_chart(player_insights[2], config=config, use_container_width=True)
+                    if player_insights[1] is not None:
+                        st.plotly_chart(player_insights[1], config=config, use_container_width=True)
+                        st.plotly_chart(player_insights[2], config=config, use_container_width=True)
                 if analysis_option == "vs Player":
                     with plot_col_2:
-                        st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
-                        st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
+                        if opponent_insights[1] is not None:
+                            st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
+                            st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
 
         st.sidebar.header(" ")
     else:

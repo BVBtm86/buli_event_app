@@ -428,55 +428,63 @@ def game_passing_direction(data, plot_team, pass_length):
         pass_df['Direction Type'] = \
             pass_df['Direction'].apply(lambda x: "Forward Passes" if x > 0 else "Backward Passes")
 
-    if pass_length != "All":
-        pass_successful = pass_df[(pass_df['Outcome'] == "Successful") &
-                                  (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
-        pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful") &
-                                    (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+        if pass_length != "All":
+            pass_successful = pass_df[(pass_df['Outcome'] == "Successful") &
+                                      (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+            pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful") &
+                                        (pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+        else:
+            pass_successful = pass_df[(pass_df['Outcome'] == "Successful")].reset_index(drop=True)
+            pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
     else:
-        pass_successful = pass_df[(pass_df['Outcome'] == "Successful")].reset_index(drop=True)
-        pass_unsuccessful = pass_df[(pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
+        pass_successful = pd.DataFrame([plot_team, 0, 0]).T
+        pass_successful.columns = ['Team', 'No of Events', '% of Events']
+        pass_successful.set_index('Team', inplace=True)
+        pass_unsuccessful = pd.DataFrame([plot_team, 0, 0]).T
+        pass_unsuccessful.columns = ['Team', 'No of Events', '% of Events']
+        pass_unsuccessful.set_index('Team', inplace=True)
 
     """ Plot Passing Data """
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
-    pitch.arrows(0, 102,
-                 15, 102,
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#ffffff',
-                 alpha=1,
-                 ax=pitch_ax)
+    if pass_df.shape[0] > 0:
+        pitch.arrows(0, 102,
+                     15, 102,
+                     width=2,
+                     headwidth=5,
+                     headlength=5,
+                     color='#ffffff',
+                     alpha=1,
+                     ax=pitch_ax)
 
-    pitch.arrows(100, 102,
-                 85, 102,
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#ffffff',
-                 alpha=1,
-                 ax=pitch_ax)
+        pitch.arrows(100, 102,
+                     85, 102,
+                     width=2,
+                     headwidth=5,
+                     headlength=5,
+                     color='#ffffff',
+                     alpha=1,
+                     ax=pitch_ax)
 
-    """ Plot the Successful Passes """
-    pitch.arrows(pass_successful['Start X'], pass_successful['Start Y'],
-                 pass_successful['End X'], pass_successful['End Y'],
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#d20614',
-                 alpha=0.75,
-                 ax=pitch_ax)
+        """ Plot the Successful Passes """
+        pitch.arrows(pass_successful['Start X'], pass_successful['Start Y'],
+                     pass_successful['End X'], pass_successful['End Y'],
+                     width=2,
+                     headwidth=5,
+                     headlength=5,
+                     color='#d20614',
+                     alpha=0.75,
+                     ax=pitch_ax)
 
-    """ Plot the Unsuccessful Passes """
-    pitch.arrows(pass_unsuccessful['Start X'], pass_unsuccessful['Start Y'],
-                 pass_unsuccessful['End X'], pass_unsuccessful['End Y'],
-                 width=1,
-                 headwidth=5,
-                 headlength=5,
-                 color='#392864',
-                 alpha=0.75,
-                 ax=pitch_ax)
+        """ Plot the Unsuccessful Passes """
+        pitch.arrows(pass_unsuccessful['Start X'], pass_unsuccessful['Start Y'],
+                     pass_unsuccessful['End X'], pass_unsuccessful['End Y'],
+                     width=1,
+                     headwidth=5,
+                     headlength=5,
+                     color='#392864',
+                     alpha=0.75,
+                     ax=pitch_ax)
 
     """ Direction Insights """
     if pass_df.shape[0] > 0:

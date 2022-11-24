@@ -348,8 +348,8 @@ def game_events(data, data_players, match_day):
             with analysis_col:
                 if top_plot is None:
                     st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the "
-                                f"Starting 11 Players of <b>{network_team}</b>, there were less then <b>"
-                                f"<font color=#d20614>2</font></b> Successful Passes.", unsafe_allow_html=True)
+                                f"Starting 11 Players of <b>{network_team}</b>, there were <b>"
+                                f"<font color=#d20614>0</font></b> Successful Passes.", unsafe_allow_html=True)
                 else:
                     st.plotly_chart(top_plot, config=config, use_container_width=True)
                     if starting_insights[0] is not None and starting_insights[1] is not None:

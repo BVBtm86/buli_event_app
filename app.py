@@ -229,6 +229,7 @@ def main():
         player_games_df, player_days_options = \
             games_player_played(team=favourite_team,
                                 player_name=final_player)
+
         if player_game_filter == "By Game":
             player_match_day = st.sidebar.selectbox(label="Select Match Day",
                                                     options=player_days_options,
@@ -254,20 +255,22 @@ def main():
 
             # ##### Venue Filter
             player_venue_options = \
-                player_games_df[player_games_df['Match Day'].isin(player_period_filter)]['Venue'].unique()
+                player_games_df[player_games_df['Match Day'].isin(player_days_options)]['Venue'].unique()
 
             venue_options = ["All Games"]
-            venue_options.extend([venue for venue in player_venue_options])
+            if "Home" in player_venue_options:
+                venue_options.append("Home")
+            if "Away" in player_venue_options:
+                venue_options.append("Away")
             player_venue_filter = st.sidebar.selectbox(label="Venue Filter",
                                                        options=venue_options)
-
             # ##### Result Filter
             if player_venue_filter == "All Games":
                 player_result_options = \
-                    player_games_df[player_games_df['Match Day'].isin(player_period_filter)]['Result'].unique()
+                    player_games_df[player_games_df['Match Day'].isin(player_days_options)]['Result'].unique()
             else:
                 player_result_options = \
-                    player_games_df[player_games_df['Match Day'].isin(player_period_filter) &
+                    player_games_df[player_games_df['Match Day'].isin(player_days_options) &
                                     (player_games_df['Venue'] == player_venue_filter)]['Result'].unique()
 
             result_options = ["All Results"]
@@ -302,8 +305,7 @@ def main():
                       period_filter=player_period_filter,
                       venue_filter=player_venue_filter,
                       result_filter=player_result_filter,
-                      current_match_day=max_match_day,
-                      game_day=player_match_day)
+                      current_match_day=max_match_day)
 
     if event_analysis == 'Home':
         # ##### Footer Page

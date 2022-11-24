@@ -228,7 +228,7 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
         players_position_fig, players_direction_fig, position_insight, direction_insight
 
 
-def player_passing_network(data_player, data_opponent, analysis_option, players_jersey, opponent_jersey):
+def player_passing_network(data_player, data_opponent, analysis_option, players_jersey, opponent_jersey, player_names):
     """ Create Pass Df """
     pass_player_df = data_player.copy()
     jersey_player_df = players_jersey.copy()
@@ -485,22 +485,19 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
         top_opponent_player_df = None
 
     """ Player Event Stats """
-    player_stats_df = pd.DataFrame([pass_player_df['Player Name'].unique()[0], pass_player_df.shape[0]]).T
+    player_stats_df = pd.DataFrame([player_names[0], pass_player_df.shape[0]]).T
     player_stats_df.columns = ["Player Name", "No of Passes"]
     player_stats_df.set_index("Player Name", inplace=True)
 
-    if pass_opponent_df is not None:
-        opponents_stats_df = pd.DataFrame([pass_opponent_df['Player Name'].unique()[0], pass_opponent_df.shape[0]]).T
-        opponents_stats_df.columns = ["Player Name", "No of Passes"]
-        opponents_stats_df.set_index("Player Name", inplace=True)
-    else:
-        opponents_stats_df = None
+    opponents_stats_df = pd.DataFrame([player_names[1], pass_opponent_df.shape[0]]).T
+    opponents_stats_df.columns = ["Player Name", "No of Passes"]
+    opponents_stats_df.set_index("Player Name", inplace=True)
 
     return player_pitch_fig, opponent_pitch_fig, top_passes_player_df, player_top_fig, \
         top_opponent_player_df, opponent_top_fig, player_stats_df, opponents_stats_df
 
 
-def player_passing_direction(data_player, data_opponent, analysis_option, analysis_games, pass_length):
+def player_passing_direction(data_player, data_opponent, analysis_option, analysis_games, pass_length, player_names):
     """ Pass Player Direction Analysis """
     player_pass_df = data_player.copy()
     if player_pass_df.shape[0] > 0:
@@ -513,16 +510,20 @@ def player_passing_direction(data_player, data_opponent, analysis_option, analys
         player_pass_df['Direction Type'] = \
             player_pass_df['Direction'].apply(lambda x: "Forward Passes" if x > 0 else "Backward Passes")
 
-    if pass_length != "All":
-        player_pass_successful = \
-            player_pass_df[(player_pass_df['Outcome'] == "Successful") &
-                           (player_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
-        player_pass_unsuccessful = \
-            player_pass_df[(player_pass_df['Outcome'] == "Unsuccessful") &
-                           (player_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+        if pass_length != "All":
+            player_pass_successful = \
+                player_pass_df[(player_pass_df['Outcome'] == "Successful") &
+                               (player_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+            player_pass_unsuccessful = \
+                player_pass_df[(player_pass_df['Outcome'] == "Unsuccessful") &
+                               (player_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+        else:
+            player_pass_successful = player_pass_df[(player_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
+            player_pass_unsuccessful = \
+                player_pass_df[(player_pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
     else:
-        player_pass_successful = player_pass_df[(player_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
-        player_pass_unsuccessful = player_pass_df[(player_pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
+        player_pass_successful = pd.DataFrame(columns=['Start X', 'Start Y', 'End X', 'End Y'])
+        player_pass_unsuccessful = pd.DataFrame(columns=['Start X', 'Start Y', 'End X', 'End Y'])
 
     if analysis_option == "Individual":
         player_pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
@@ -537,34 +538,35 @@ def player_passing_direction(data_player, data_opponent, analysis_option, analys
     if analysis_games is not None:
         player_pitch_fig, player_pitch_ax = \
             player_pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
-        player_pitch.arrows(x_arrows[0], x_arrows[1],
-                            y_arrows[0], y_arrows[1],
-                            width=2,
-                            headwidth=5,
-                            headlength=5,
-                            color='#ffffff',
-                            alpha=1,
-                            ax=player_pitch_ax)
+        if player_pass_df.shape[0] > 0:
+            player_pitch.arrows(x_arrows[0], x_arrows[1],
+                                y_arrows[0], y_arrows[1],
+                                width=2,
+                                headwidth=5,
+                                headlength=5,
+                                color='#ffffff',
+                                alpha=1,
+                                ax=player_pitch_ax)
 
-        """ Plot the Successful Passes """
-        player_pitch.arrows(player_pass_successful['Start X'], player_pass_successful['Start Y'],
-                            player_pass_successful['End X'], player_pass_successful['End Y'],
-                            width=2,
-                            headwidth=5,
-                            headlength=5,
-                            color='#d20614',
-                            alpha=0.75,
-                            ax=player_pitch_ax)
+            """ Plot the Successful Passes """
+            player_pitch.arrows(player_pass_successful['Start X'], player_pass_successful['Start Y'],
+                                player_pass_successful['End X'], player_pass_successful['End Y'],
+                                width=2,
+                                headwidth=5,
+                                headlength=5,
+                                color='#d20614',
+                                alpha=0.75,
+                                ax=player_pitch_ax)
 
-        """ Plot the Unsuccessful Passes """
-        player_pitch.arrows(player_pass_unsuccessful['Start X'], player_pass_unsuccessful['Start Y'],
-                            player_pass_unsuccessful['End X'], player_pass_unsuccessful['End Y'],
-                            width=1,
-                            headwidth=5,
-                            headlength=5,
-                            color='#392864',
-                            alpha=0.75,
-                            ax=player_pitch_ax)
+            """ Plot the Unsuccessful Passes """
+            player_pitch.arrows(player_pass_unsuccessful['Start X'], player_pass_unsuccessful['Start Y'],
+                                player_pass_unsuccessful['End X'], player_pass_unsuccessful['End Y'],
+                                width=1,
+                                headwidth=5,
+                                headlength=5,
+                                color='#392864',
+                                alpha=0.75,
+                                ax=player_pitch_ax)
     else:
         player_pitch_fig = None
 
@@ -631,7 +633,9 @@ def player_passing_direction(data_player, data_opponent, analysis_option, analys
         else:
             player_unsuccessful_insight = None
     else:
-        player_pass_outcome = None
+        player_pass_outcome = pd.DataFrame([player_names[0], 0, 0]).T
+        player_pass_outcome.columns = ["Player Name", "No of Events", "% of Events"]
+        player_pass_outcome.set_index("Player Name", inplace=True)
         player_length_fig = None
         player_direction_fig = None
         player_successful_insight = None
@@ -651,52 +655,56 @@ def player_passing_direction(data_player, data_opponent, analysis_option, analys
             opponent_pass_df['Direction Type'] = \
                 opponent_pass_df['Direction'].apply(lambda x: "Forward Passes" if x > 0 else "Backward Passes")
 
-        if pass_length != "All":
-            opponent_pass_successful = \
-                opponent_pass_df[(opponent_pass_df['Outcome'] == "Successful") &
-                                 (opponent_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
-            opponent_pass_unsuccessful = \
-                opponent_pass_df[(opponent_pass_df['Outcome'] == "Unsuccessful") &
-                                 (opponent_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+            if pass_length != "All":
+                opponent_pass_successful = \
+                    opponent_pass_df[(opponent_pass_df['Outcome'] == "Successful") &
+                                     (opponent_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+                opponent_pass_unsuccessful = \
+                    opponent_pass_df[(opponent_pass_df['Outcome'] == "Unsuccessful") &
+                                     (opponent_pass_df['Distance Length'] == pass_length)].reset_index(drop=True)
+            else:
+                opponent_pass_successful = \
+                    opponent_pass_df[(opponent_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
+                opponent_pass_unsuccessful = \
+                    opponent_pass_df[(opponent_pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
         else:
-            opponent_pass_successful = \
-                opponent_pass_df[(opponent_pass_df['Outcome'] == "Successful")].reset_index(drop=True)
-            opponent_pass_unsuccessful = \
-                opponent_pass_df[(opponent_pass_df['Outcome'] == "Unsuccessful")].reset_index(drop=True)
+            opponent_pass_successful = pd.DataFrame(columns=['Start X', 'Start Y', 'End X', 'End Y'])
+            opponent_pass_unsuccessful = pd.DataFrame(columns=['Start X', 'Start Y', 'End X', 'End Y'])
 
         """ Plot Passing Data """
         if analysis_games is not None:
             opponent_pitch = VerticalPitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
             opponent_pitch_fig, opponent_pitch_ax = opponent_pitch.draw(figsize=(15, 15), constrained_layout=True,
                                                                         tight_layout=False)
-            opponent_pitch.arrows(0, 102,
-                                  30, 102,
-                                  width=2,
-                                  headwidth=5,
-                                  headlength=5,
-                                  color='#ffffff',
-                                  alpha=1,
-                                  ax=opponent_pitch_ax)
+            if opponent_pass_df.shape[0] > 0:
+                opponent_pitch.arrows(0, 102,
+                                      30, 102,
+                                      width=2,
+                                      headwidth=5,
+                                      headlength=5,
+                                      color='#ffffff',
+                                      alpha=1,
+                                      ax=opponent_pitch_ax)
 
-            """ Plot the Successful Passes """
-            opponent_pitch.arrows(opponent_pass_successful['Start X'], opponent_pass_successful['Start Y'],
-                                  opponent_pass_successful['End X'], opponent_pass_successful['End Y'],
-                                  width=2,
-                                  headwidth=5,
-                                  headlength=5,
-                                  color='#d20614',
-                                  alpha=0.75,
-                                  ax=opponent_pitch_ax)
+                """ Plot the Successful Passes """
+                opponent_pitch.arrows(opponent_pass_successful['Start X'], opponent_pass_successful['Start Y'],
+                                      opponent_pass_successful['End X'], opponent_pass_successful['End Y'],
+                                      width=2,
+                                      headwidth=5,
+                                      headlength=5,
+                                      color='#d20614',
+                                      alpha=0.75,
+                                      ax=opponent_pitch_ax)
 
-            """ Plot the Unsuccessful Passes """
-            opponent_pitch.arrows(opponent_pass_unsuccessful['Start X'], opponent_pass_unsuccessful['Start Y'],
-                                  opponent_pass_unsuccessful['End X'], opponent_pass_unsuccessful['End Y'],
-                                  width=1,
-                                  headwidth=5,
-                                  headlength=5,
-                                  color='#392864',
-                                  alpha=0.75,
-                                  ax=opponent_pitch_ax)
+                """ Plot the Unsuccessful Passes """
+                opponent_pitch.arrows(opponent_pass_unsuccessful['Start X'], opponent_pass_unsuccessful['Start Y'],
+                                      opponent_pass_unsuccessful['End X'], opponent_pass_unsuccessful['End Y'],
+                                      width=1,
+                                      headwidth=5,
+                                      headlength=5,
+                                      color='#392864',
+                                      alpha=0.75,
+                                      ax=opponent_pitch_ax)
         else:
             opponent_pitch_fig = None
 
@@ -766,14 +774,18 @@ def player_passing_direction(data_player, data_opponent, analysis_option, analys
             else:
                 opponent_unsuccessful_insight = None
         else:
-            opponent_pass_outcome = None
+            opponent_pass_outcome = pd.DataFrame([player_names[1], 0, 0]).T
+            opponent_pass_outcome.columns = ["Player Name", "No of Events", "% of Events"]
+            opponent_pass_outcome.set_index("Player Name", inplace=True)
             opponent_length_fig = None
             opponent_direction_fig = None
             opponent_successful_insight = None
             opponent_unsuccessful_insight = None
     else:
         opponent_pitch_fig = None
-        opponent_pass_outcome = None
+        opponent_pass_outcome = pd.DataFrame([player_names[1], 0, 0]).T
+        opponent_pass_outcome.columns = ["Player Name", "No of Events", "% of Events"]
+        opponent_pass_outcome.set_index("Player Name", inplace=True)
         opponent_length_fig = None
         opponent_direction_fig = None
         opponent_successful_insight = None
