@@ -60,7 +60,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                           options=opponent_players)
         with name_col:
             st.markdown(f"<h3><font color=#d20614>{player_name}</font> vs <font color=#392864>{compare_player}</font>"
-                        f" {page_season_type} <font color=#d20614>{analysis_type}</font></h3>",
+                        f" - {page_season_type} <font color=#d20614>{analysis_type}</font></h3>",
                         unsafe_allow_html=True)
 
     # ##### Final Data
