@@ -164,33 +164,37 @@ def player_analysis(data_player, player_data_opponent, player_options, analysis_
     direction_stats = direction_stats.sort_values(by=['Player Name', 'Direction'])
 
     """ Insight Plot """
-    players_position_fig = px.bar(position_stats,
-                                  x='Position',
-                                  y='%',
-                                  color='Player Name',
-                                  color_discrete_map=color_plotly,
-                                  height=500,
-                                  barmode='group',
-                                  title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
-                                  hover_data={'%': ':.2%'})
-    players_position_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    players_position_fig.layout.yaxis.tickformat = ',.0%'
+    if position_stats.shape[0] > 0:
+        players_position_fig = px.bar(position_stats,
+                                      x='Position',
+                                      y='%',
+                                      color='Player Name',
+                                      color_discrete_map=color_plotly,
+                                      height=500,
+                                      barmode='group',
+                                      title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
+                                      hover_data={'%': ':.2%'})
+        players_position_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        players_position_fig.layout.yaxis.tickformat = ',.0%'
 
-    players_direction_fig = px.bar(direction_stats,
-                                   x='Direction',
-                                   y='%',
-                                   color='Player Name',
-                                   color_discrete_map=color_plotly,
-                                   height=500,
-                                   barmode='group',
-                                   title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
-                                   hover_data={'%': ':.2%'})
-    players_direction_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    players_direction_fig.layout.yaxis.tickformat = ',.0%'
+        players_direction_fig = px.bar(direction_stats,
+                                       x='Direction',
+                                       y='%',
+                                       color='Player Name',
+                                       color_discrete_map=color_plotly,
+                                       height=500,
+                                       barmode='group',
+                                       title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
+                                       hover_data={'%': ':.2%'})
+        players_direction_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        players_direction_fig.layout.yaxis.tickformat = ',.0%'
+    else:
+        players_position_fig = None
+        players_direction_fig = None
 
     """ Event Insights """
     """ Analysis Insights """
@@ -489,9 +493,12 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
     player_stats_df.columns = ["Player Name", "No of Passes"]
     player_stats_df.set_index("Player Name", inplace=True)
 
-    opponents_stats_df = pd.DataFrame([player_names[1], pass_opponent_df.shape[0]]).T
-    opponents_stats_df.columns = ["Player Name", "No of Passes"]
-    opponents_stats_df.set_index("Player Name", inplace=True)
+    if pass_opponent_df is not None:
+        opponents_stats_df = pd.DataFrame([player_names[1], pass_opponent_df.shape[0]]).T
+        opponents_stats_df.columns = ["Player Name", "No of Passes"]
+        opponents_stats_df.set_index("Player Name", inplace=True)
+    else:
+        opponents_stats_df = None
 
     return player_pitch_fig, opponent_pitch_fig, top_passes_player_df, player_top_fig, \
         top_opponent_player_df, opponent_top_fig, player_stats_df, opponents_stats_df

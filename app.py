@@ -4,6 +4,8 @@ from streamlit_option_menu import option_menu
 from page_scripts.game_page import game_events
 from page_scripts.team_page import team_events
 from page_scripts.player_page import player_events
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # ##### Logo and App Info
 buli_logo = Image.open('images/Bundesliga.png')

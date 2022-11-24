@@ -1,7 +1,7 @@
+import pandas as pd
 import streamlit as st
 from page_scripts.stats_scripts.utilities import avg_keep_players_opponent, players_query, players_jersey_query
 from page_scripts.stats_scripts.player_stats import player_analysis, player_passing_network, player_passing_direction
-
 
 # ##### Event Options
 event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
@@ -63,43 +63,6 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                         f" {analysis_option} <font color=#d20614>{page_season_type}</font></h3>",
                         unsafe_allow_html=True)
 
-    """ Minutes Filter """
-    st.sidebar.header("Time Filter")
-    game_time = st.sidebar.selectbox(label="Game Phase",
-                                     options=["Entire Game", "1st Half", "2nd Half"])
-
-    if game_time == "Entire Game":
-        min_minute = player_data['Minute'].min()
-        max_minute = player_data['Minute'].max()
-
-        time_filter = st.sidebar.select_slider(label="Select Period",
-                                               options=[i for i in range(min_minute, max_minute + 1)],
-                                               value=(min_minute, max_minute))
-    elif game_time == "1st Half":
-        time_option = st.sidebar.selectbox(label="Select Period",
-                                           options=["Entire Period", "1-15", '16-30', '31-45+'])
-        max_minute = player_data[player_data['Period'] == '1st Half']['Minute'].max()
-        if time_option == "Entire Period":
-            time_filter = [0, max_minute]
-        elif time_option == "1-15":
-            time_filter = [0, 15]
-        elif time_option == "16-30":
-            time_filter = [16, 30]
-        elif time_option == "31-45+":
-            time_filter = [31, max_minute]
-    else:
-        time_option = st.sidebar.selectbox(label="Select Period",
-                                           options=["Entire Period", "46-60", '61-75', '76-90+'])
-        max_minute = player_data[player_data['Period'] == '2nd Half']['Minute'].max()
-        if time_option == "Entire Period":
-            time_filter = [45, max_minute]
-        elif time_option == "46-60":
-            time_filter = [45, 60]
-        elif time_option == "61-75":
-            time_filter = [61, 75]
-        elif time_option == "76-90+":
-            time_filter = [76, max_minute]
-
     # ##### Final Data
     if compare_player is not None:
         player_data_opponent = players_query(team_sql=team_player_opponent,
@@ -152,14 +115,10 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
     if analysis_type == "Game Events":
         page_container = st.empty()
         with page_container.container():
+
             """ Final Data """
-            if game_time == "Entire Game":
-                event_types = player_data[(player_data['Minute'] >= time_filter[0]) &
-                                          (player_data['Minute'] <= time_filter[1])]['Event'].unique()
-            else:
-                event_types = player_data[(player_data['Period'] == game_time) &
-                                          (player_data['Minute'] >= time_filter[0]) &
-                                          (player_data['Minute'] <= time_filter[1])]['Event'].unique()
+            event_types = player_data[(player_data['Minute'] >= time_filter[0]) &
+                                      (player_data['Minute'] <= time_filter[1])]['Event'].unique()
 
             final_event_types = [event for event in event_options if event in event_types]
             with menu_col:
@@ -174,8 +133,47 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                                  options=["Successful", "Unsuccessful"])
                     event_outcome_label = event_outcome
                 else:
-                    event_outcome = event_outcome_type[0]
+                    event_outcome = "Successful"
                     event_outcome_label = ""
+
+            """ Minutes Filter """
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = player_data['Minute'].min()
+                max_minute = player_data['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = player_data[player_data['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = player_data[player_data['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
+
+            st.sidebar.header(" ")
 
             """ Game Event Analysis """
             if game_time == "Entire Game":
@@ -217,6 +215,8 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                     plot_type = st.selectbox(label="Plot Type",
                                              options=['Heatmap', 'Position'])
 
+            if final_player_df.shape[0] == 0:
+                event_analysis = "Events"
             player_fig, opponent_fig, player_stats, opponent_stats, position_plot, direction_plot, \
                 position_stats, direction_stats = \
                 player_analysis(data_player=final_player_df,
@@ -324,27 +324,66 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                             f"{direction_stats[1][1]:.2%}</font></b> in <b>{direction_stats[0][1]}</b> of the Pitch.",
                             unsafe_allow_html=True)
 
-            with st.expander("Display Position and Direction Plots"):
-                info_col, pos_col, _, dir_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
-                with info_col:
-                    st.subheader("")
-                    st.header("")
-                    st.subheader("")
-                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-                    st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
-                    if analysis_option == "vs Player":
-                        st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
-                with pos_col:
-                    st.plotly_chart(position_plot, config=config, use_container_width=True)
-                with dir_col:
-                    st.plotly_chart(direction_plot, config=config, use_container_width=True)
-
-        st.sidebar.header(" ")
+            if position_plot is not None:
+                with st.expander("Display Position and Direction Plots"):
+                    info_col, pos_col, _, dir_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
+                    with info_col:
+                        st.subheader("")
+                        st.header("")
+                        st.subheader("")
+                        st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
+                        if analysis_option == "vs Player":
+                            st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
+                    with pos_col:
+                        st.plotly_chart(position_plot, config=config, use_container_width=True)
+                    with dir_col:
+                        st.plotly_chart(direction_plot, config=config, use_container_width=True)
 
         """ Passing Network Page """
     elif analysis_type == "Passing Network":
         page_container = st.empty()
         with page_container.container():
+
+            """ Minutes Filter """
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = player_data['Minute'].min()
+                max_minute = player_data['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = player_data[player_data['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = player_data[player_data['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
+
+            st.sidebar.header(" ")
+
             """ Final Data """
             if game_time == "Entire Game":
                 final_player_pass_df = player_data[(player_data['Outcome'] == 'Successful') &
@@ -457,27 +496,28 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                     f"{team_opponent_name}</font>", unsafe_allow_html=True)
                         st.markdown(f"-> <b>Attack</b></font> Direction", unsafe_allow_html=True)
 
-            with st.expander("Display Network Stats Plot"):
-                if analysis_option == "vs Player":
-                    info_col, network_plot_1, _, network_plot_2, _ = st.columns([2, 5, 0.5, 5, 0.5])
-                else:
-                    info_col, network_plot_1, _ = st.columns([2, 10, 1])
-                with info_col:
-                    st.subheader("")
-                    st.header("")
-                    st.subheader("")
-                    st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-                    st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
-                with network_plot_1:
-                    if player_top_fig is not None:
-                        st.plotly_chart(player_top_fig, config=config, use_container_width=True)
-
-                if analysis_option == "vs Player":
+            if player_top_fig is not None or \
+                    (player_top_fig is None and analysis_option == "vs Player" and opponent_top_fig is not None):
+                with st.expander("Display Network Stats Plot"):
+                    if analysis_option == "vs Player":
+                        info_col, network_plot_1, _, network_plot_2, _ = st.columns([2, 5, 0.5, 5, 0.5])
+                    else:
+                        info_col, network_plot_1, _ = st.columns([2, 10, 1])
                     with info_col:
-                        st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
-                    with network_plot_2:
-                        if opponent_top_fig is not None:
-                            st.plotly_chart(opponent_top_fig, config=config, use_container_width=True)
+                        st.subheader("")
+                        st.header("")
+                        st.subheader("")
+                        st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<b><font color=#d20614>{player_name}</font></b>", unsafe_allow_html=True)
+                    with network_plot_1:
+                        if player_top_fig is not None:
+                            st.plotly_chart(player_top_fig, config=config, use_container_width=True)
+                    if analysis_option == "vs Player":
+                        with info_col:
+                            st.markdown(f"<b><font color=#392864>{compare_player}</font></b>", unsafe_allow_html=True)
+                        with network_plot_2:
+                            if opponent_top_fig is not None:
+                                st.plotly_chart(opponent_top_fig, config=config, use_container_width=True)
 
         st.sidebar.header(" ")
 
@@ -485,6 +525,46 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
     elif analysis_type == "Passing Distance":
         page_container = st.empty()
         with page_container.container():
+
+            """ Minutes Filter """
+            st.sidebar.header("Time Filter")
+            game_time = st.sidebar.selectbox(label="Game Phase",
+                                             options=["Entire Game", "1st Half", "2nd Half"])
+
+            if game_time == "Entire Game":
+                min_minute = player_data['Minute'].min()
+                max_minute = player_data['Minute'].max()
+
+                time_filter = st.sidebar.select_slider(label="Select Period",
+                                                       options=[i for i in range(min_minute, max_minute + 1)],
+                                                       value=(min_minute, max_minute))
+            elif game_time == "1st Half":
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "1-15", '16-30', '31-45+'])
+                max_minute = player_data[player_data['Period'] == '1st Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [0, max_minute]
+                elif time_option == "1-15":
+                    time_filter = [0, 15]
+                elif time_option == "16-30":
+                    time_filter = [16, 30]
+                elif time_option == "31-45+":
+                    time_filter = [31, max_minute]
+            else:
+                time_option = st.sidebar.selectbox(label="Select Period",
+                                                   options=["Entire Period", "46-60", '61-75', '76-90+'])
+                max_minute = player_data[player_data['Period'] == '2nd Half']['Minute'].max()
+                if time_option == "Entire Period":
+                    time_filter = [45, max_minute]
+                elif time_option == "46-60":
+                    time_filter = [45, 60]
+                elif time_option == "61-75":
+                    time_filter = [61, 75]
+                elif time_option == "76-90+":
+                    time_filter = [76, max_minute]
+
+            st.sidebar.header(" ")
+
             """ Final Data """
             if game_time == "Entire Game":
                 final_player_pass_df = player_data[(player_data['Minute'] >= time_filter[0]) &
@@ -509,7 +589,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                              (player_data_opponent['Minute'] <= time_filter[1]) &
                                              (player_data_opponent['Event'] == "Passes")]
             else:
-                final_opponent_pass_df = None
+                final_opponent_pass_df = pd.DataFrame()
 
             """ Pass Length """
             with menu_col:
@@ -642,27 +722,32 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                 f"Unsuccessful Passes</font></b>.", unsafe_allow_html=True)
 
             if match_day_filter is not None:
-                with st.expander("Display Distance Plot"):
-                    if analysis_option == "Individual":
-                        info_col, player_col, _ = st.columns([2, 10, 0.5])
-                    else:
-                        info_col, player_col, _, opp_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
-                    with info_col:
-                        st.subheader("")
-                        st.header("")
-                        st.subheader("")
-                        st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
-                        st.markdown(f"<font color=#d20614><b>Successful</b></font> Passes", unsafe_allow_html=True)
-                        st.markdown(f"<font color=#392864><b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
-                    with player_col:
-                        if player_insights[1] is not None:
-                            st.plotly_chart(player_insights[1], config=config, use_container_width=True)
-                            st.plotly_chart(player_insights[2], config=config, use_container_width=True)
-                    if analysis_option == "vs Player":
-                        with opp_col:
-                            if opponent_insights[1] is not None:
-                                st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
-                                st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
+                if player_insights[1] is not None or \
+                        (player_insights[1] is None and analysis_option == "vs Player" and
+                         opponent_insights[1] is not None):
+                    with st.expander("Display Distance Plot"):
+                        if analysis_option == "Individual":
+                            info_col, player_col, _ = st.columns([2, 10, 0.5])
+                        else:
+                            info_col, player_col, _, opp_col, _ = st.columns([2, 5, 0.5, 5, 0.5])
+                        with info_col:
+                            st.subheader("")
+                            st.header("")
+                            st.subheader("")
+                            st.markdown(f"<h4>Legend</h4>", unsafe_allow_html=True)
+                            st.markdown(
+                                f"<font color=#d20614><b>Successful</b></font> Passes", unsafe_allow_html=True)
+                            st.markdown(
+                                f"<font color=#392864><b>Unsuccessful</b></font> Passes", unsafe_allow_html=True)
+                        with player_col:
+                            if player_insights[1] is not None:
+                                st.plotly_chart(player_insights[1], config=config, use_container_width=True)
+                                st.plotly_chart(player_insights[2], config=config, use_container_width=True)
+                        if analysis_option == "vs Player":
+                            with opp_col:
+                                if opponent_insights[1] is not None:
+                                    st.plotly_chart(opponent_insights[1], config=config, use_container_width=True)
+                                    st.plotly_chart(opponent_insights[2], config=config, use_container_width=True)
             else:
                 with plot_col_1:
                     if player_insights[1] is not None:

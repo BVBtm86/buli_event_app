@@ -15,7 +15,7 @@ def calculate_distance(x_start, y_start, x_end, y_end):
     return pass_distance
 
 
-def team_analysis(data, analysis_type, event_teams, plot_type, no_games, event_outcome, event_type):
+def team_events_analysis(data, analysis_type, event_teams, plot_type, no_games, event_outcome, event_type):
     final_df = data.copy()
 
     if analysis_type == "vs Opponents":
@@ -128,35 +128,39 @@ def team_analysis(data, analysis_type, event_teams, plot_type, no_games, event_o
     direction_stats = direction_stats.sort_values(by=['Team', 'Direction'])
 
     """ Insight Plot """
-    position_fig = px.bar(position_stats,
-                          x='Position',
-                          y='%',
-                          color='Team',
-                          color_discrete_map={event_teams[0]: team_colors[0],
-                                              stat_name: team_colors[1]},
-                          height=500,
-                          barmode='group',
-                          title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
-                          hover_data={'%': ':.2%'})
-    position_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    position_fig.layout.yaxis.tickformat = ',.0%'
+    if final_df.shape[0] > 0:
+        position_fig = px.bar(position_stats,
+                              x='Position',
+                              y='%',
+                              color='Team',
+                              color_discrete_map={event_teams[0]: team_colors[0],
+                                                  stat_name: team_colors[1]},
+                              height=500,
+                              barmode='group',
+                              title=f"{event_outcome} <b>{event_type}</b> by Pitch Position",
+                              hover_data={'%': ':.2%'})
+        position_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        position_fig.layout.yaxis.tickformat = ',.0%'
 
-    direction_fig = px.bar(direction_stats,
-                           x='Direction',
-                           y='%',
-                           color='Team',
-                           color_discrete_map={event_teams[0]: team_colors[0],
-                                               stat_name: team_colors[1]},
-                           height=500,
-                           barmode='group',
-                           title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
-                           hover_data={'%': ':.2%'})
-    direction_fig.update_layout({
-        "plot_bgcolor": "rgba(0, 0, 0, 0)"},
-        showlegend=False)
-    direction_fig.layout.yaxis.tickformat = ',.0%'
+        direction_fig = px.bar(direction_stats,
+                               x='Direction',
+                               y='%',
+                               color='Team',
+                               color_discrete_map={event_teams[0]: team_colors[0],
+                                                   stat_name: team_colors[1]},
+                               height=500,
+                               barmode='group',
+                               title=f"{event_outcome} <b>{event_type}</b> by Pitch Direction",
+                               hover_data={'%': ':.2%'})
+        direction_fig.update_layout({
+            "plot_bgcolor": "rgba(0, 0, 0, 0)"},
+            showlegend=False)
+        direction_fig.layout.yaxis.tickformat = ',.0%'
+    else:
+        position_fig = None
+        direction_fig = None
 
     """ Event Insights """
     """ Analysis Insights """
