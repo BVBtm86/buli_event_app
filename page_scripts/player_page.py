@@ -38,8 +38,8 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
     if analysis_option == "Individual":
         name_col, _ = st.columns([10, 2])
         with name_col:
-            st.markdown(f"<h3><font color=#d20614>{player_name}</font> - {analysis_option} <font color=#d20614>"
-                        f"{page_season_type}</font></h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3><font color=#d20614>{player_name}</font> - {page_season_type} <font color=#d20614>"
+                        f"{analysis_type}</font></h3>", unsafe_allow_html=True)
         menu_col, _, plot_col_1, legend_col = st.columns([2, 0.1, 8, 0.5])
         team_player_opponent = None
         compare_player = None
@@ -60,7 +60,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                           options=opponent_players)
         with name_col:
             st.markdown(f"<h3><font color=#d20614>{player_name}</font> vs <font color=#392864>{compare_player}</font>"
-                        f" {analysis_option} <font color=#d20614>{page_season_type}</font></h3>",
+                        f" {page_season_type} <font color=#d20614>{analysis_type}</font></h3>",
                         unsafe_allow_html=True)
 
     # ##### Final Data
