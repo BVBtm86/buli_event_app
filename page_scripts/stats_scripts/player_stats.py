@@ -239,14 +239,16 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
 
     pass_player_df = \
         pass_player_df[pass_player_df['Player Name'] != pass_player_df['Player Name Receiver']].reset_index(drop=True)
-
+    no_player_passes = pass_player_df.shape[0]
     if analysis_option == "vs Player":
         pass_opponent_df = data_opponent.copy()
         pass_opponent_df = \
             pass_opponent_df[pass_opponent_df['Player Name'] != pass_opponent_df['Player Name Receiver']].reset_index(
                 drop=True)
+        no_opponent_passes = pass_opponent_df.shape[0]
     else:
         pass_opponent_df = None
+        no_opponent_passes = 0
 
     """ Create Player Network Data """
     ''' Average Data '''
@@ -497,12 +499,12 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
         top_opponent_player_df = None
 
     """ Player Event Stats """
-    player_stats_df = pd.DataFrame([player_names[0], pass_player_df.shape[0]]).T
+    player_stats_df = pd.DataFrame([player_names[0], no_player_passes]).T
     player_stats_df.columns = ["Player Name", "No of Passes"]
     player_stats_df.set_index("Player Name", inplace=True)
 
     if pass_opponent_df is not None:
-        opponents_stats_df = pd.DataFrame([player_names[1], pass_opponent_df.shape[0]]).T
+        opponents_stats_df = pd.DataFrame([player_names[1], no_opponent_passes]).T
         opponents_stats_df.columns = ["Player Name", "No of Passes"]
         opponents_stats_df.set_index("Player Name", inplace=True)
     else:
