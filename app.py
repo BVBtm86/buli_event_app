@@ -37,6 +37,15 @@ div.stButton > button:hover {
     }
 </style>""", unsafe_allow_html=True)
 
+# ##### Hide Streamlit info
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 # ##### Main Page
 season = "2022-2023"
 buli_logo_col, text_col = st.columns([1, 10])
@@ -80,7 +89,7 @@ def main():
     info_df = info_query()
 
     if event_analysis == 'Home':
-        st.subheader("")
+        st.markdown("")
         st.markdown(
             'A Statistical application that allows the user to analyse Bundesliga Game Events Data for Team and Players'
             '.<br> <br> <b>App Features</b>', unsafe_allow_html=True)
