@@ -617,7 +617,7 @@ def pass_sequence_creation(data, sequence_team):
     """ Sequence Stats """
     no_sequences = sequence_team_df['Sequence No'].nunique()
     avg_sequence = sequence_team_df.groupby(['Sequence No'])['Id'].count().mean()
-    total_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=("Total Seq Passes", "Total Avg Passes"),
+    total_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=["Total Seq Passes", "Total Avg Passes"],
                                         columns=['#'])
     return sequence_team_df, total_sequence_stats
 
@@ -686,7 +686,7 @@ def pass_sequence_df(data, team_sequence, close_sequence, no_sequence, players_i
     """ Sequence Stats """
     no_sequences = event_df['Sequence No'].nunique()
     avg_sequence = event_df.groupby(['Sequence No'])['Id'].count().mean()
-    event_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=("Event Seq Passes", "Event Avg Passes"),
+    event_sequence_stats = pd.DataFrame([no_sequences, avg_sequence], index=["Event Seq Passes", "Event Avg Passes"],
                                         columns=['#'])
 
     return final_sequence_df, player_legend_df, event_sequence_stats
