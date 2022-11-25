@@ -236,6 +236,7 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
     """ Create Pass Df """
     pass_player_df = data_player.copy()
     jersey_player_df = players_jersey.copy()
+
     pass_player_df = \
         pass_player_df[pass_player_df['Player Name'] != pass_player_df['Player Name Receiver']].reset_index(drop=True)
 
@@ -264,6 +265,7 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                              how='left')
     player_avg_df = player_avg_df.dropna(subset=['Jersey No'])
     player_avg_df = player_avg_df.nlargest(11, 'No Passes').reset_index(drop=True)
+
     if player_avg_df.shape[0] > 1:
         player_avg_df.iloc[0, 3] = player_avg_df.iloc[1:, 3].max() + 5
     pass_player_df['Keep'] = \
@@ -274,6 +276,7 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
     player_network_df = pass_player_df.groupby(['Pass Pair'])['Event'].count().reset_index()
     player_network_df['Player Name'] = player_network_df['Pass Pair'].apply(lambda x: x.split(" - ")[0])
     player_network_df['Player Name Receiver'] = player_network_df['Pass Pair'].apply(lambda x: x.split(" - ")[1])
+
     player_network_df = pd.merge(left=player_network_df,
                                  right=player_avg_df.drop(columns=['No Passes']),
                                  left_on=['Player Name'],
@@ -319,6 +322,7 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                         ax=player_pitch_ax)
 
     if pass_player_df.shape[0] > 0:
+        player_avg_df['Jersey No'] = player_avg_df['Jersey No'].astype(int)
         player_pitch.lines(player_network_df['Start X'], player_network_df['Start Y'],
                            player_network_df['End X'], player_network_df['End Y'],
                            lw=player_network_df['Pass Width'],
@@ -332,7 +336,6 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                              linewidth=1,
                              alpha=0.5,
                              ax=player_pitch_ax)
-        player_avg_df['Jersey No'] = player_avg_df['Jersey No'].astype(int)
         for index, row in player_avg_df.iterrows():
             player_pitch.annotate(row['Jersey No'], xy=(row['Start X'], row['Start Y']), c='#ffffff',
                                   va='center', ha='center', size=16, weight='bold', ax=player_pitch_ax)
@@ -343,9 +346,12 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                                     left_on=['Player Name Receiver'],
                                     right_on=['Player Name'],
                                     how='left')
+    top_passes_player_df[['Jersey No_x', 'Jersey No_y']] = \
+        top_passes_player_df[['Jersey No_x', 'Jersey No_y']].astype(int)
     top_passes_player_df['Player Combo'] = \
         top_passes_player_df['Jersey No_x'].astype(str) + " - " + top_passes_player_df['Jersey No_y'].astype(str)
-    top_passes_player_df['Player Combo'] = top_passes_player_df['Player Combo'].str.replace(".0", "")
+
+    top_passes_player_df['Player Combo'] = top_passes_player_df['Player Combo']
     top_passes_player_df = top_passes_player_df.sort_values(by='Event', ascending=True)
     top_passes_player_df.rename(columns={"Event": "No of Passes"}, inplace=True)
     if top_passes_player_df.shape[0] > 0:
@@ -436,6 +442,7 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                               ax=opponent_pitch_ax)
 
         if pass_opponent_df.shape[0] > 0:
+            opponent_avg_df['Jersey No'] = opponent_avg_df['Jersey No'].astype(int)
             opponent_pitch.lines(opponent_network_df['Start X'], opponent_network_df['Start Y'],
                                  opponent_network_df['End X'], opponent_network_df['End Y'],
                                  lw=opponent_network_df['Pass Width'],
@@ -460,10 +467,11 @@ def player_passing_network(data_player, data_opponent, analysis_option, players_
                                               left_on=['Player Name Receiver'],
                                               right_on=['Player Name'],
                                               how='left')
+            top_opponent_player_df[['Jersey No_x', 'Jersey No_y']] = \
+                top_opponent_player_df[['Jersey No_x', 'Jersey No_y']].astype(int)
             top_opponent_player_df['Player Combo'] = \
                 top_opponent_player_df['Jersey No_x'].astype(str) + " - " + top_opponent_player_df[
                     'Jersey No_y'].astype(str)
-            top_opponent_player_df['Player Combo'] = top_opponent_player_df['Player Combo'].str.replace(".0", "")
             top_opponent_player_df = top_opponent_player_df.sort_values(by='Event', ascending=True)
             top_opponent_player_df.rename(columns={"Event": "No of Passes"}, inplace=True)
             if top_opponent_player_df.shape[0] > 0:
