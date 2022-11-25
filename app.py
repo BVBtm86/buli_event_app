@@ -91,9 +91,11 @@ def main():
     if event_analysis == 'Home':
         st.markdown("")
         st.markdown(
-            'A Statistical application that allows the user to analyse Bundesliga Game Events Data for Team and Players'
-            '.<br> <br> <b>App Features</b>', unsafe_allow_html=True)
+            '<h5>A Statistical application that allows the user to analyse Bundesliga Game Events Data for '
+            'Team and Players</h5>', unsafe_allow_html=True)
 
+        st.header("")
+        st.markdown("<b>App Features</b>", unsafe_allow_html=True)
         """ 
         * Select your favourite team
         * Select your favourite Player
@@ -112,7 +114,9 @@ def main():
                 * Game Events
                 * Passing Network
                 * Passing Direction
-    """
+        """
+        st.header("")
+
     elif event_analysis == 'Game':
         # ##### Filter by Team and Match Day
         max_match_day = info_df[info_df['Team'] == favourite_team]['Match Day'].max()
