@@ -7,3 +7,4 @@ numpy~=1.23.5
 plotly~=5.11.0
 matplotlib~=3.6.2
 streamlit-option-menu==0.3.2
+Pillow~=9.2.0

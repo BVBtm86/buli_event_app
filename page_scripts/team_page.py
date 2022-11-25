@@ -310,8 +310,8 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                 if top_plot is None:
                     st.markdown("")
                     st.markdown(f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b> from the "
-                                f"Starting 11 Players of <b>{team_name}</b>, there were less then <b>"
-                                f"<font color=#d20614>2</font></b> Successful Passes.", unsafe_allow_html=True)
+                                f"Starting 11 Players of <b>{team_name}</b>, there were <b><font color=#d20614>0</font>"
+                                f"</b> Successful Passes.", unsafe_allow_html=True)
                 else:
                     st.plotly_chart(top_plot, config=config, use_container_width=True)
                     if season_name == "" and venue_name == "" and result_name == "":

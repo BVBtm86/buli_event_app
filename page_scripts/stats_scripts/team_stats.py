@@ -202,61 +202,84 @@ def team_passing_network(data, network_players):
     pass_df = pass_df[pass_df['Keep Player'] == 2].reset_index(drop=True)
 
     """ Create Network Data """
-    pass_df['Pass Pair'] = pass_df['Player Name'] + " - " + pass_df['Player Name Receiver']
-    network_df = pass_df.groupby(['Pass Pair'])['Event'].count().reset_index()
+    pass_given = pass_df[['Player Name', 'Player Name Receiver']]
+    pass_received = \
+        pass_df[['Player Name Receiver', 'Player Name']].rename(columns={'Player Name Receiver': 'Player Name',
+                                                                         'Player Name': 'Player Name Receiver'})
+    final_pass_df = pd.concat([pass_given, pass_received], axis=0)
+    final_pass_df['Event'] = 1
+
+    final_pass_df['Pass Pair'] = final_pass_df['Player Name'] + " - " + final_pass_df['Player Name Receiver']
+    network_df = final_pass_df.groupby(['Pass Pair'])['Event'].count().reset_index()
     network_df['Player Name'] = network_df['Pass Pair'].apply(lambda x: x.split(" - ")[0])
     network_df['Player Name Receiver'] = network_df['Pass Pair'].apply(lambda x: x.split(" - ")[1])
 
+    keep_pair = []
+    pair_exist = []
+    for i in range(len(network_df)):
+        if (network_df.iloc[i, 2] + " - " + network_df.iloc[i, 3] in pair_exist) or (
+                network_df.iloc[i, 3] + " - " + network_df.iloc[i, 2] in pair_exist):
+            keep_pair.append(False)
+        else:
+            keep_pair.append(True)
+            pair_exist.append(network_df.iloc[i, 2] + " - " + network_df.iloc[i, 3])
+            pair_exist.append(network_df.iloc[i, 3] + " - " + network_df.iloc[i, 2])
+
+    network_df['Keep'] = keep_pair
+    network_df = network_df[network_df["Keep"]].reset_index(drop=True)
+
+    """ Avg Position Location """
     avg_df = pass_df.groupby(['Player Name'])[['Start X', 'Start Y']].agg(
         {'Start X': ['mean'], 'Start Y': ['mean', 'count']}).reset_index()
     avg_df.columns = ['Player Name', 'Start X', 'Start Y', 'No Passes']
 
-    network_df = pd.merge(left=network_df,
-                          right=avg_df.drop(columns=['No Passes']),
+    if network_df.shape[0] > 0:
+        network_df = pd.merge(left=network_df,
+                              right=avg_df.drop(columns=['No Passes']),
+                              left_on=['Player Name'],
+                              right_on=['Player Name'],
+                              how='left')
+        network_df = pd.merge(left=network_df,
+                              right=avg_df.rename(columns={'Player Name': 'Player Name Receiver'}).drop(
+                                  columns=['No Passes']),
+                              left_on=['Player Name Receiver'],
+                              right_on=['Player Name Receiver'],
+                              how='left')
+        network_df.iloc[:, -4:] = np.round(network_df.iloc[:, -4:], 2)
+        network_df.rename(columns={'Start X_x': 'Start X', 'Start Y_x': 'Start Y',
+                                   'Start X_y': 'End X', 'Start Y_y': 'End Y'}, inplace=True)
+
+        avg_df = pd.merge(left=avg_df,
+                          right=network_players[['Player Name', 'Jersey No']],
                           left_on=['Player Name'],
                           right_on=['Player Name'],
                           how='left')
-    network_df = pd.merge(left=network_df,
-                          right=avg_df.rename(columns={'Player Name': 'Player Name Receiver'}).drop(
-                              columns=['No Passes']),
-                          left_on=['Player Name Receiver'],
-                          right_on=['Player Name Receiver'],
-                          how='left')
-    network_df.iloc[:, -4:] = np.round(network_df.iloc[:, -4:], 2)
-    network_df.rename(columns={'Start X_x': 'Start X', 'Start Y_x': 'Start Y',
-                               'Start X_y': 'End X', 'Start Y_y': 'End Y'}, inplace=True)
-
-    avg_df = pd.merge(left=avg_df,
-                      right=network_players[['Player Name', 'Jersey No']],
-                      left_on=['Player Name'],
-                      right_on=['Player Name'],
-                      how='left')
 
     """ Plot Network Data """
-    max_line_width = 10
-    max_marker_size = 2000
-    network_df['Pass Width'] = (network_df['Event'] / network_df['Event'].max() * max_line_width)
-    avg_df['Size'] = (avg_df['No Passes'] / avg_df['No Passes'].max() * max_marker_size)
-
-    min_transparency = 0.3
-    color = np.array(to_rgba('white'))
-    color = np.tile(color, (len(network_df), 1))
-    c_transparency = network_df['Event'] / network_df['Event'].max()
-    c_transparency = (c_transparency * (1 - min_transparency)) + min_transparency
-    color[:, 3] = c_transparency
-
     pitch = Pitch(pitch_type='opta', pitch_color='#57595D', line_color='white')
     pitch_fig, pitch_ax = pitch.draw(figsize=(15, 15), constrained_layout=True, tight_layout=False)
-    pitch.arrows(0, 102,
-                 15, 102,
-                 width=2,
-                 headwidth=5,
-                 headlength=5,
-                 color='#ffffff',
-                 alpha=1,
-                 ax=pitch_ax)
+    if avg_df.shape[0] > 0:
+        max_line_width = 10
+        max_marker_size = 2000
+        network_df['Pass Width'] = (network_df['Event'] / network_df['Event'].max() * max_line_width)
+        avg_df['Size'] = (avg_df['No Passes'] / avg_df['No Passes'].max() * max_marker_size)
 
-    if pass_df.shape[0] > 0:
+        min_transparency = 0.3
+        color = np.array(to_rgba('white'))
+        color = np.tile(color, (len(network_df), 1))
+        c_transparency = network_df['Event'] / network_df['Event'].max()
+        c_transparency = (c_transparency * (1 - min_transparency)) + min_transparency
+        color[:, 3] = c_transparency
+
+        pitch.arrows(0, 102,
+                     15, 102,
+                     width=2,
+                     headwidth=5,
+                     headlength=5,
+                     color='#ffffff',
+                     alpha=1,
+                     ax=pitch_ax)
+
         pitch.lines(network_df['Start X'], network_df['Start Y'],
                     network_df['End X'], network_df['End Y'],
                     lw=network_df['Pass Width'],
@@ -275,25 +298,25 @@ def team_passing_network(data, network_players):
                            ha='center', size=16, weight='bold', ax=pitch_ax)
 
     """ Analysis Network Data """
-    top_passes_df = network_df.nlargest(10, 'Event')
-    top_passes_df = pd.merge(left=top_passes_df,
-                             right=network_players[['Player Name', 'Jersey No']],
-                             left_on=['Player Name'],
-                             right_on=['Player Name'],
-                             how='left')
-    top_passes_df = pd.merge(left=top_passes_df,
-                             right=network_players.rename(
-                                 columns={
-                                     'Player Name': 'Player Name Receiver'})[['Player Name Receiver', 'Jersey No']],
-                             left_on=['Player Name Receiver'],
-                             right_on=['Player Name Receiver'],
-                             how='left')
-    top_passes_df['Player Combo'] = \
-        top_passes_df['Jersey No_x'].astype(str) + " - " + top_passes_df['Jersey No_y'].astype(str)
+    if network_df.shape[0] > 0:
+        top_passes_df = network_df.nlargest(10, 'Event')
+        top_passes_df = pd.merge(left=top_passes_df,
+                                 right=network_players[['Player Name', 'Jersey No']],
+                                 left_on=['Player Name'],
+                                 right_on=['Player Name'],
+                                 how='left')
+        top_passes_df = pd.merge(left=top_passes_df,
+                                 right=network_players.rename(
+                                     columns={
+                                         'Player Name': 'Player Name Receiver'})[['Player Name Receiver', 'Jersey No']],
+                                 left_on=['Player Name Receiver'],
+                                 right_on=['Player Name Receiver'],
+                                 how='left')
+        top_passes_df['Player Combo'] = \
+            top_passes_df['Jersey No_x'].astype(str) + " - " + top_passes_df['Jersey No_y'].astype(str)
 
-    top_passes_df = top_passes_df.sort_values(by='Event', ascending=True)
-    top_passes_df.rename(columns={"Event": "No of Passes"}, inplace=True)
-    if pass_df.shape[0] > 0:
+        top_passes_df = top_passes_df.sort_values(by='Event', ascending=True)
+        top_passes_df.rename(columns={"Event": "No of Passes"}, inplace=True)
         top_fig = px.bar(top_passes_df,
                          x='No of Passes',
                          y='Player Combo',
@@ -306,6 +329,7 @@ def team_passing_network(data, network_players):
         top_fig.update_traces(marker_color='#d20614')
     else:
         top_fig = None
+        top_passes_df = None
 
     """ Network Insights """
     if pass_df.shape[0] > 0:
