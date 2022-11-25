@@ -54,6 +54,7 @@ with buli_container:
     with buli_logo_col:
         st.image(buli_logo, use_column_width=True)
     with text_col:
+        st.markdown("")
         st.markdown(f"<h1><font color = #d20614>Bundesliga</font> Game Events <font color = #d20614>{season}</font>"
                     f"</h1>", unsafe_allow_html=True)
 
