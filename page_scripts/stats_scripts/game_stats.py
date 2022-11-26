@@ -11,16 +11,15 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 
 team_colors = ["#d20614", "#392864"]
 
-original_event_name = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
-                       'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
-                       'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',
-                       'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
+original_event_name = ['Goal', 'Shots', 'Passes', 'Dribbles', 'Corner Awarded', 'Ball Recoveries',
+                       'Interceptions', 'Aerial Duels', 'Tackles', 'Loss of Possession', 'Clearances', 'Challenges',
+                       'Blocked Passes', 'Fouls', 'Offsides', 'Errors', 'Keeper Saves', 'Keeper Claims',
+                       'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
 
-sequence_event_name = ['Unsuccessful Pass', 'Goal', 'Shot Saved', 'Shot Missed', 'Shot On Post', 'Penalty',
-                       'Unsuccessful Ball Touch', 'Unsuccessful Dribble', 'Corner Awarded', 'Ball Recovery',
-                       'Interception', 'Unsuccessful Aerial Duel', 'Tackled', 'Dispossessed', 'Clearance',
-                       'Challenged', 'Blocked Pass', 'Fouled', 'Offside', 'Error', 'Keeper Save',
-                       'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
+sequence_event_name = ['Goal', 'Shot', 'Unsuccessful Pass', 'Unsuccessful Dribble', 'Corner Awarded', 'Ball Recovery',
+                       'Interception', 'Unsuccessful Aerial Duel', 'Tackled', 'Lost Possession', 'Clearance',
+                       'Challenged', 'Blocked Pass', 'Fouled', 'Offside', 'Error', 'Keeper Save', 'Keeper Claim',
+                       'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
 
 
 def calculate_distance(x_start, y_start, x_end, y_end):
@@ -582,6 +581,7 @@ def pass_sequence_creation(data, sequence_team):
     """ Create Pass Sequence Df """
     final_pass_df = data.copy()
     final_pass_df = final_pass_df.sort_values(by=["Final Minute", "Second"]).reset_index(drop=True)
+    final_pass_df.loc[final_pass_df['Outcome'] == "Goal", 'Event'] = "Goal"
 
     """ Create Sequence """
     period_index = final_pass_df[final_pass_df['Period'] == '2nd Half'].index[0]

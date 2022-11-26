@@ -4,16 +4,12 @@ from page_scripts.stats_scripts.utilities import avg_keep_players_opponent, play
 from page_scripts.stats_scripts.player_stats import player_analysis, player_passing_network, player_passing_direction
 
 # ##### Event Options
-event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
-                 'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
-                 'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',
-                 'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
+event_options = ['Ball Possession', 'Passes', 'Shots', 'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions',
+                 'Aerial Duels', 'Tackles', 'Loss of Possession', 'Clearances', 'Challenges', 'Blocked Passes',
+                 'Fouls', 'Offsides', 'Errors', 'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups',
+                 'Keeper Sweeper']
 
-event_options_sequence = ['Goal', 'Unsuccessful Pass', 'Shot Saved', 'Shot Missed', 'Shot On Post', 'Penalty',
-                          'Unsuccessful Ball Touch', 'Unsuccessful Dribble', 'Corner Awarded', 'Ball Recovery',
-                          'Interception', 'Unsuccessful Aerial Duel', 'Tackled', 'Dispossessed', 'Clearance',
-                          'Challenged', 'Blocked Pass', 'Fouled', 'Offside', 'Error', 'Keeper Save',
-                          'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
+event_shots_type = ["Goal", "Shot on Target", "Shot off Target", "Shot on Post", "Own Goal"]
 
 
 def player_events(data, analysis_option, analysis_type, team_player, opponent_teams, player_name,
@@ -116,25 +112,48 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
         page_container = st.empty()
         with page_container.container():
 
-            """ Final Data """
-            event_types = player_data[(player_data['Minute'] >= time_filter[0]) &
-                                      (player_data['Minute'] <= time_filter[1])]['Event'].unique()
-
-            final_event_types = [event for event in event_options if event in event_types]
+            """ Event Types """
+            event_types = player_data['Event'].unique()
+            final_event_types = ["Ball Possession"]
+            final_event_types.extend(
+                [event for event in event_options if event in event_types and event != "Ball Possession"])
             with menu_col:
                 event_analysis = st.selectbox(label="Event Type",
                                               options=final_event_types)
-
-                event_outcome_type = player_data[(player_data['Minute'] >= time_filter[0]) &
-                                                 (player_data['Minute'] <= time_filter[1]) &
-                                                 (player_data['Event'] == event_analysis)]['Outcome'].unique()
-                if len(event_outcome_type) == 2:
+                event_outcome_type = player_data[(player_data['Event'] == event_analysis)]['Outcome'].unique()
+                event_stat = "Event"
+                if event_analysis == "Shots":
+                    event_stat = "Event"
+                    final_outcome = ["All Shots"]
+                    final_outcome.extend([shot for shot in event_shots_type if shot in event_outcome_type])
                     event_outcome = st.selectbox(label="Event Outcome",
-                                                 options=["Successful", "Unsuccessful"])
+                                                 options=final_outcome)
                     event_outcome_label = event_outcome
-                else:
+                    event_analysis_label = ""
+                elif event_analysis == "Ball Possession":
+                    event_stat = "Ball Possession"
+                    event_analysis = True
                     event_outcome = "Successful"
                     event_outcome_label = ""
+                    event_analysis_label = "Ball Possession"
+                else:
+                    if len(event_outcome_type) == 2:
+                        event_outcome = st.selectbox(label="Event Outcome",
+                                                     options=["Successful", "Unsuccessful"])
+                        event_outcome_label = event_outcome
+                    else:
+                        event_outcome = event_outcome_type[0]
+                        event_outcome_label = ""
+                    event_analysis_label = event_analysis
+
+            if event_stat == "Ball Possession":
+                filter_event_outcome = ["Successful"]
+                filter_event_outcome.extend(event_shots_type)
+            else:
+                if event_outcome == "All Shots":
+                    filter_event_outcome = event_shots_type
+                else:
+                    filter_event_outcome = [event_outcome]
 
             """ Minutes Filter """
             st.sidebar.header("Time Filter")
@@ -177,29 +196,31 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
 
             """ Game Event Analysis """
             if game_time == "Entire Game":
-                final_player_df = player_data[(player_data['Outcome'] == event_outcome) &
+                final_player_df = player_data[(player_data['Outcome'].isin(filter_event_outcome)) &
                                               (player_data['Minute'] >= time_filter[0]) &
                                               (player_data['Minute'] <= time_filter[1]) &
-                                              (player_data['Event'] == event_analysis)]
+                                              (player_data[event_stat] == event_analysis)]
             else:
                 final_player_df = player_data[(player_data['Period'] == game_time) &
-                                              (player_data['Outcome'] == event_outcome) &
+                                              (player_data['Outcome'].isin(filter_event_outcome)) &
                                               (player_data['Minute'] >= time_filter[0]) &
                                               (player_data['Minute'] <= time_filter[1]) &
-                                              (player_data['Event'] == event_analysis)]
+                                              (player_data[event_stat] == event_analysis)]
 
             if player_data_opponent is not None:
                 if game_time == "Entire Game":
-                    final_opponent_df = player_data_opponent[(player_data_opponent['Outcome'] == event_outcome) &
-                                                             (player_data_opponent['Minute'] >= time_filter[0]) &
-                                                             (player_data_opponent['Minute'] <= time_filter[1]) &
-                                                             (player_data_opponent['Event'] == event_analysis)]
+                    final_opponent_df = \
+                        player_data_opponent[(player_data_opponent['Outcome'].isin(filter_event_outcome)) &
+                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                             (player_data_opponent[event_stat] == event_analysis)]
                 else:
-                    final_opponent_df = player_data_opponent[(player_data_opponent['Period'] == game_time) &
-                                                             (player_data_opponent['Outcome'] == event_outcome) &
-                                                             (player_data_opponent['Minute'] >= time_filter[0]) &
-                                                             (player_data_opponent['Minute'] <= time_filter[1]) &
-                                                             (player_data_opponent['Event'] == event_analysis)]
+                    final_opponent_df = \
+                        player_data_opponent[(player_data_opponent['Period'] == game_time) &
+                                             (player_data_opponent['Outcome'].isin(filter_event_outcome)) &
+                                             (player_data_opponent['Minute'] >= time_filter[0]) &
+                                             (player_data_opponent['Minute'] <= time_filter[1]) &
+                                             (player_data_opponent[event_stat] == event_analysis)]
             else:
                 final_opponent_df = None
 
@@ -234,7 +255,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
             with plot_col_1:
                 st.markdown(
                     f"<b><font color=#d20614>{player_name}</font></b> <b>{event_outcome}</b> <b><font color=#d20614>"
-                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{event_analysis_label}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
                     f"{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(player_fig)
             with menu_col:
@@ -262,8 +283,8 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                 with plot_col_2:
                     st.markdown(
                         f"<b><font color=#392864>{compare_player}</font></b> <b>{event_outcome}</b> <b>"
-                        f"<font color=#392864>{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b>"
-                        f" and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
+                        f"<font color=#392864>{event_analysis_label}</font></b> Events between Minute <b>"
+                        f"{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>", unsafe_allow_html=True)
                     st.pyplot(opponent_fig)
                 with legend_col:
                     if player_option_filter == "By Game":
@@ -301,7 +322,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{player_name}</font></b> had <b><font color=#d20614>{position_stats[1][0]:.2%}</font>"
-                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_stats[0][0]}"
+                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis_label}</b> in <b>{position_stats[0][0]}"
                     f"</b> of the Pitch and <b><font color=#d20614>{direction_stats[1][0]:.2%}</font></b> in "
                     f" <b>{direction_stats[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
                 if analysis_option == "vs Player":
@@ -319,10 +340,10 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                         st.markdown(
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                             f"<font color=#392864>{compare_player}</font></b> had <b><font color=#392864>"
-                            f"{position_stats[1][1]:.2%}</font></b> <b>{event_outcome_label}</b> <b>{event_analysis}"
-                            f"</b> in <b>{position_stats[0][1]}</b> of the Pitch and <b><font color=#392864>"
-                            f"{direction_stats[1][1]:.2%}</font></b> in <b>{direction_stats[0][1]}</b> of the Pitch.",
-                            unsafe_allow_html=True)
+                            f"{position_stats[1][1]:.2%}</font></b> <b>{event_outcome_label}</b> <b>"
+                            f"{event_analysis_label}</b> in <b>{position_stats[0][1]}</b> of the Pitch and <b>"
+                            f"<font color=#392864>{direction_stats[1][1]:.2%}</font></b> in <b>{direction_stats[0][1]}"
+                            f"</b> of the Pitch.", unsafe_allow_html=True)
 
             if position_plot is not None:
                 with st.expander("Display Position and Direction Plots"):

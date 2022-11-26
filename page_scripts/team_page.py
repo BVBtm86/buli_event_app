@@ -3,16 +3,12 @@ from PIL import Image
 from page_scripts.stats_scripts.team_stats import team_events_analysis, team_passing_network, team_passing_direction
 
 # ##### Event Options
-event_options = ['Passes', 'Goals', 'Shots Saved', 'Shots Missed', 'Shots On Post', 'Penalties', 'Ball Touches',
-                 'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions', 'Aerial Duels', 'Tackles',
-                 'Dispossessions', 'Clearances', 'Challenges', 'Blocked Passes', 'Fouls', 'Offsides', 'Errors',
-                 'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups', 'Keeper Sweeper']
+event_options = ['Ball Possession', 'Passes', 'Shots', 'Dribbles', 'Corner Awarded', 'Ball Recoveries', 'Interceptions',
+                 'Aerial Duels', 'Tackles', 'Loss of Possession', 'Clearances', 'Challenges', 'Blocked Passes',
+                 'Fouls', 'Offsides', 'Errors', 'Keeper Saves', 'Keeper Claims', 'Keeper Punches', 'Keeper Pickups',
+                 'Keeper Sweeper']
 
-event_options_sequence = ['Goal', 'Unsuccessful Pass', 'Shot Saved', 'Shot Missed', 'Shot On Post', 'Penalty',
-                          'Unsuccessful Ball Touch', 'Unsuccessful Dribble', 'Corner Awarded', 'Ball Recovery',
-                          'Interception', 'Unsuccessful Aerial Duel', 'Tackled', 'Dispossessed', 'Clearance',
-                          'Challenged', 'Blocked Pass', 'Fouled', 'Offside', 'Error', 'Keeper Save',
-                          'Keeper Claim', 'Keeper Punch', 'Keeper Pickup', 'Keeper Sweep']
+event_shots_type = ["Goal", "Shot on Target", "Shot off Target", "Shot on Post", "Own Goal"]
 
 
 def team_events(data, players_data, analysis_option, analysis_team, team_name, opp_name, page_filter):
@@ -63,24 +59,47 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
             menu_col, _, plot_1, _, plot_2, _ = st.columns([3, 0.5, 6, 0.5, 6, 0.5])
 
             """ Event Types """
-            event_types = team_data[(team_data['Minute'] >= time_filter[0]) &
-                                    (team_data['Minute'] <= time_filter[1])]['Event'].unique()
-
-            final_event_types = [event for event in event_options if event in event_types]
+            event_types = team_data['Event'].unique()
+            final_event_types = ["Ball Possession"]
+            final_event_types.extend(
+                [event for event in event_options if event in event_types and event != "Ball Possession"])
             with menu_col:
                 event_analysis = st.selectbox(label="Event Type",
                                               options=final_event_types)
-
-                event_outcome_type = team_data[(team_data['Minute'] >= time_filter[0]) &
-                                               (team_data['Minute'] <= time_filter[1]) &
-                                               (team_data['Event'] == event_analysis)]['Outcome'].unique()
-                if len(event_outcome_type) == 2:
+                event_outcome_type = team_data[(team_data['Event'] == event_analysis)]['Outcome'].unique()
+                event_stat = "Event"
+                if event_analysis == "Shots":
+                    event_stat = "Event"
+                    final_outcome = ["All Shots"]
+                    final_outcome.extend([shot for shot in event_shots_type if shot in event_outcome_type])
                     event_outcome = st.selectbox(label="Event Outcome",
-                                                 options=["Successful", "Unsuccessful"])
+                                                 options=final_outcome)
                     event_outcome_label = event_outcome
-                else:
-                    event_outcome = event_outcome_type[0]
+                    event_analysis_label = ""
+                elif event_analysis == "Ball Possession":
+                    event_stat = "Ball Possession"
+                    event_analysis = True
+                    event_outcome = "Successful"
                     event_outcome_label = ""
+                    event_analysis_label = "Ball Possession"
+                else:
+                    if len(event_outcome_type) == 2:
+                        event_outcome = st.selectbox(label="Event Outcome",
+                                                     options=["Successful", "Unsuccessful"])
+                        event_outcome_label = event_outcome
+                    else:
+                        event_outcome = event_outcome_type[0]
+                        event_outcome_label = ""
+                    event_analysis_label = event_analysis
+
+            if event_stat == "Ball Possession":
+                filter_event_outcome = ["Successful"]
+                filter_event_outcome.extend(event_shots_type)
+            else:
+                if event_outcome == "All Shots":
+                    filter_event_outcome = event_shots_type
+                else:
+                    filter_event_outcome = [event_outcome]
 
             """ Minutes Filter """
             st.sidebar.header("Time Filter")
@@ -123,16 +142,16 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
 
             """ Game Event Analysis """
             if game_time == "Entire Game":
-                final_team_df = team_data[(team_data['Outcome'] == event_outcome) &
+                final_team_df = team_data[(team_data['Outcome'].isin(filter_event_outcome)) &
                                           (team_data['Minute'] >= time_filter[0]) &
                                           (team_data['Minute'] <= time_filter[1]) &
-                                          (team_data['Event'] == event_analysis)]
+                                          (team_data[event_stat] == event_analysis)]
             else:
-                final_team_df = team_data[(team_data['Period'] == game_time) &
+                final_team_df = team_data[(team_data['Period'].isin(filter_event_outcome)) &
                                           (team_data['Outcome'] == event_outcome) &
                                           (team_data['Minute'] >= time_filter[0]) &
                                           (team_data['Minute'] <= time_filter[1]) &
-                                          (team_data['Event'] == event_analysis)]
+                                          (team_data[event_stat] == event_analysis)]
 
             team_min_events = final_team_df[final_team_df['Team'] == team_name].shape[0]
             if analysis_team == "vs Opponents":
@@ -161,13 +180,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
             with plot_1:
                 st.markdown(
                     f"<b><font color=#d20614>{team_name}</font></b> <b>{event_outcome}</b> <b><font color=#d20614>"
-                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{event_analysis_label}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
                     f"{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(event_fig_team)
             with plot_2:
                 st.markdown(
                     f"<b><font color=#392864>{opp_label}</font></b> <b>{event_outcome}</b> <b><font color=#392864>"
-                    f"{event_analysis}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
+                    f"{event_analysis_label}</font></b> Events between Minute <b>{time_filter[0]}</b> and Minute <b>"
                     f"{time_filter[1]}</b>", unsafe_allow_html=True)
                 st.pyplot(event_fig_opp)
 
@@ -192,13 +211,13 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#d20614>{team_name}</font></b> had <b><font color=#d20614>{position_stats[1][0]:.2%}</font>"
-                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_stats[0][0]}"
+                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis_label}</b> in <b>{position_stats[0][0]}"
                     f"</b> of the Pitch and <b><font color=#d20614>{direction_stats[1][0]:.2%}</font></b> in "
                     f" <b>{direction_stats[0][0]}</b> of the Pitch.", unsafe_allow_html=True)
                 st.markdown(
                     f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b><font color="
                     f"#392864>{opp_label}</font></b> had <b><font color=#392864>{position_stats[1][1]:.2%}</font>"
-                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis}</b> in <b>{position_stats[0][1]}"
+                    f"</b> <b>{event_outcome_label}</b> <b>{event_analysis_label}</b> in <b>{position_stats[0][1]}"
                     f"</b> of the Pitch and <b><font color=#392864>{direction_stats[1][1]:.2%}</font></b> in "
                     f"<b>{direction_stats[0][1]}</b> of the Pitch.", unsafe_allow_html=True)
 
