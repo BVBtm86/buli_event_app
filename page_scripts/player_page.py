@@ -248,7 +248,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                 no_games=no_games,
                                 no_events=no_events,
                                 event_outcome=event_outcome_label,
-                                event_type=event_analysis,
+                                event_type=event_analysis_label,
                                 player_names=[player_name,
                                               compare_player])
 

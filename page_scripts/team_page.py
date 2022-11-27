@@ -175,7 +175,7 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                        plot_type=plot_type,
                                        no_games=no_games,
                                        event_outcome=event_outcome_label,
-                                       event_type=event_analysis)
+                                       event_type=event_analysis_label)
 
             with plot_1:
                 st.markdown(

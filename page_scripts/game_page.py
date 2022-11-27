@@ -224,7 +224,7 @@ def game_events(data, data_players, match_day):
                               game_teams=[home_team,
                                           away_team],
                               plot_type=plot_type,
-                              event_type=event_analysis,
+                              event_type=event_analysis_label,
                               event_outcome=event_outcome_label,
                               heat_team=heatmap_team,
                               no_events=no_total_events)
