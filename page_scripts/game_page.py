@@ -112,7 +112,8 @@ def game_events(data, data_players, match_day):
                 final_outcome.extend([shot for shot in event_shots_type if shot in event_outcome_type])
                 event_outcome = st.sidebar.selectbox(label="Event Outcome",
                                                      options=final_outcome)
-                event_outcome_label = event_outcome
+                event_outcome_label = \
+                    event_outcome.replace("All Shots", "Shot").replace("Shot", "Shots").replace("Goal", "Goals")
                 event_analysis_label = ""
             elif event_analysis == "Ball Possession":
                 event_stat = "Ball Possession"
