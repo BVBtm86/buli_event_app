@@ -237,7 +237,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                              options=['Heatmap', 'Position'])
 
             if final_player_df.shape[0] == 0:
-                event_analysis = "Events"
+                event_analysis_label = "Events"
             player_fig, opponent_fig, player_stats, opponent_stats, position_plot, direction_plot, \
                 position_stats, direction_stats = \
                 player_analysis(data_player=final_player_df,
