@@ -515,14 +515,14 @@ def game_events(data, data_players, match_day):
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                                 f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{passing_team}</b> "
                                 f"where <b>{success_insight[0]}</b> and <b>{success_insight[1]}</b> while most of the "
-                                f"<b><font color=#d20614>Unsuccessful Passes</font></b> of <b>{passing_team}</b> where "
+                                f"<b><font color=#392864>Unsuccessful Passes</font></b> of <b>{passing_team}</b> where "
                                 f"<b>{unsuccess_insight[0]}</b> and <b>{unsuccess_insight[1]}</b>.",
                                 unsafe_allow_html=True)
                         elif success_insight is None and unsuccess_insight is not None:
                             st.markdown(
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                                 f"{passing_team}</b> had <b>No</b> <b><font color=#d20614>Successful Passes</font></b> "
-                                f"while most of the <b><font color=#d20614>Unsuccessful Passes</font></b> of <b>"
+                                f"while most of the <b><font color=#392864>Unsuccessful Passes</font></b> of <b>"
                                 f"{passing_team}</b> where <b>{unsuccess_insight[0]}</b> and <b>{unsuccess_insight[1]}"
                                 f"</b>.", unsafe_allow_html=True)
                         elif success_insight is not None and unsuccess_insight is None:
@@ -530,7 +530,7 @@ def game_events(data, data_players, match_day):
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                                 f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{passing_team}</b> "
                                 f"where <b>{success_insight[0]}</b> and <b>{success_insight[1]}</b> while there were "
-                                f"<b>No</b> <b><font color=#d20614>Unsuccessful Passes</font></b>.",
+                                f"<b>No</b> <b><font color=#392864>Unsuccessful Passes</font></b>.",
                                 unsafe_allow_html=True)
                 else:
                     st.markdown(

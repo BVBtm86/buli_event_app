@@ -311,8 +311,9 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
 
             with menu_col:
                 if match_day_name != "":
-                    st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
-                                unsafe_allow_html=True)
+                    st.markdown(
+                        f"<b>Match Day <font color=#d20614>{match_day_name}</font> vs <font color=#d20614>"
+                        f"{player_data['Opponent'].unique()[0]}</font> Insights", unsafe_allow_html=True)
                 else:
                     if season_name == "" and venue_name == "" and result_name == "":
                         st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
@@ -329,11 +330,12 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                 if analysis_option == "vs Player":
                     with legend_col:
                         if match_day_name != "":
-                            st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
-                                        unsafe_allow_html=True)
+                            st.markdown(f"<b>Match Day <font color=#392864>{match_day_name}</font> vs "
+                                        f"<font color=#392864>{player_data_opponent['Opponent'].unique()[0]}"
+                                        f"</font> Insights", unsafe_allow_html=True)
                         else:
                             if season_name == "" and venue_name == "" and result_name == "":
-                                st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
+                                st.markdown(f"<b>Season <font color=#392864>{season_year}</font> Games Insights</b>",
                                             unsafe_allow_html=True)
                             else:
                                 st.markdown(f"<b>{season_name} {venue_name} {result_name} Games Insights</b>",
@@ -659,8 +661,9 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                 st.markdown("")
                 if final_player_pass_df.shape[0] > 0:
                     if match_day_name != "":
-                        st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
-                                    unsafe_allow_html=True)
+                        st.markdown(
+                            f"<b>Match Day <font color=#d20614>{match_day_name}</font> vs <font color=#d20614>"
+                            f"{player_data['Opponent'].unique()[0]}</font> Insights", unsafe_allow_html=True)
                     else:
                         if season_name == "" and venue_name == "" and result_name == "":
                             st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>",
@@ -673,14 +676,14 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                         f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{player_name}</b> "
                         f"where <b>{player_insights[3][0]}</b> and <b>{player_insights[3][1]}</b> while most of the "
-                        f"<b><font color=#d20614>Unsuccessful Passes</font></b> of <b>{player_name}</b> where "
+                        f"<b><font color=#392864>Unsuccessful Passes</font></b> of <b>{player_name}</b> where "
                         f"<b>{player_insights[4][0]}</b> and <b>{player_insights[4][1]}</b>.",
                         unsafe_allow_html=True)
                 elif player_insights[3] is None and player_insights[4] is not None:
                     st.markdown(
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                         f"{player_name}</b> had <b>No</b> <b><font color=#d20614>Successful Passes</font></b> "
-                        f"while most of the <b><font color=#d20614>Unsuccessful Passes</font></b> of <b>"
+                        f"while most of the <b><font color=#392864>Unsuccessful Passes</font></b> of <b>"
                         f"{player_name}</b> where <b>{player_insights[4][0]}</b> and <b>{player_insights[4][1]}"
                         f"</b>.", unsafe_allow_html=True)
                 elif player_insights[3] is not None and player_insights[4] is None:
@@ -688,7 +691,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                         f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                         f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{player_name}</b> "
                         f"where <b>{player_insights[3][0]}</b> and <b>{player_insights[3][1]}</b> while there were "
-                        f"<b>No</b> <b><font color=#d20614>Unsuccessful Passes</font></b>.",
+                        f"<b>No</b> <b><font color=#392864>Unsuccessful Passes</font></b>.",
                         unsafe_allow_html=True)
 
             if analysis_option == "vs Player":
@@ -703,16 +706,17 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                                                         formatter="{:.2%}").apply(
                             lambda x: ['background: #ffffff' if i % 2 == 0 else 'background: #e7e7e7'
                                        for i in range(len(x))], axis=0).apply(
-                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #d20614'
+                            lambda x: ['color: #1e1e1e' if i % 2 == 0 else 'color: #392864'
                                        for i in range(len(x))], axis=0).set_table_styles(
                             [{'selector': 'th',
-                              'props': [('background-color', '#d20614'),
+                              'props': [('background-color', '#392864'),
                                         ('color', '#ffffff')]}]))
                         st.markdown("")
                         if final_opponent_pass_df is not None and final_opponent_pass_df.shape[0] > 0:
                             if match_day_name != "":
-                                st.markdown(f"<b>Match Day <font color=#d20614>{match_day_name}</font> Insights",
-                                            unsafe_allow_html=True)
+                                st.markdown(f"<b>Match Day <font color=#392864>{match_day_name}</font> vs "
+                                            f"<font color=#392864>{player_data_opponent['Opponent'].unique()[0]}"
+                                            f"</font> Insights", unsafe_allow_html=True)
                             else:
                                 if season_name == "" and venue_name == "" and result_name == "":
                                     st.markdown(f"<b>Season <font color=#d20614>{season_year}</font> Games Insights</b>"
@@ -725,14 +729,14 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most "
                                 f"of the <b><font color=#d20614>Successful Passes</font></b> of <b>{compare_player}"
                                 f"</b> where <b>{opponent_insights[3][0]}</b> and <b>{opponent_insights[3][1]}</b> "
-                                f"while most of the <b><font color=#d20614>Unsuccessful Passes</font></b> of <b>"
+                                f"while most of the <b><font color=#392864>Unsuccessful Passes</font></b> of <b>"
                                 f"{compare_player}</b> where <b>{opponent_insights[4][0]}</b> and <b>"
                                 f"{opponent_insights[4][1]}</b>.", unsafe_allow_html=True)
                         elif opponent_insights[3] is None and opponent_insights[4] is not None:
                             st.markdown(
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                                 f"{compare_player}</b> had <b>No</b> <b><font color=#d20614>Successful Passes"
-                                f"</font></b> while most of the <b><font color=#d20614>Unsuccessful Passes</font>"
+                                f"</font></b> while most of the <b><font color=#392864>Unsuccessful Passes</font>"
                                 f"</b> of <b>{compare_player}</b> where <b>{opponent_insights[4][0]}</b> and <b>"
                                 f"{opponent_insights[4][1]}</b>.", unsafe_allow_html=True)
                         elif opponent_insights[3] is not None and opponent_insights[4] is None:
@@ -740,7 +744,7 @@ def player_events(data, analysis_option, analysis_type, team_player, opponent_te
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most"
                                 f" of the <b><font color=#d20614>Successful Passes</font></b> of <b>"
                                 f"{compare_player}</b> where <b>{opponent_insights[3][0]}</b> and <b>"
-                                f"{opponent_insights[3][1]}</b> while there were <b>No</b> <b><font color=#d20614>"
+                                f"{opponent_insights[3][1]}</b> while there were <b>No</b> <b><font color=#392864>"
                                 f"Unsuccessful Passes</font></b>.", unsafe_allow_html=True)
 
             if match_day_filter is not None:

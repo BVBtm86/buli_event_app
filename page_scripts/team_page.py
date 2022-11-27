@@ -447,14 +447,14 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                             f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{team_name}</b> "
                             f"where <b>{team_data[3][0]}</b> and <b>{team_data[3][1]}</b> while most of the "
-                            f"<b><font color=#d20614>Unsuccessful Passes</font></b> of <b>{team_name}</b> where "
+                            f"<b><font color=#392864>Unsuccessful Passes</font></b> of <b>{team_name}</b> where "
                             f"<b>{team_data[4][0]}</b> and <b>{team_data[4][1]}</b>.",
                             unsafe_allow_html=True)
                     elif team_data[3] is None and team_data[4] is not None:
                         st.markdown(
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                             f"{team_name}</b> had <b>No</b> <b><font color=#d20614>Successful Passes</font></b> "
-                            f"while most of the <b><font color=#d20614>Unsuccessful Passes</font></b> of <b>"
+                            f"while most of the <b><font color=#392864>Unsuccessful Passes</font></b> of <b>"
                             f"{team_name}</b> where <b>{team_data[4][0]}</b> and <b>{team_data[4][1]}"
                             f"</b>.", unsafe_allow_html=True)
                     elif team_data[3] is not None and team_data[4] is None:
@@ -462,7 +462,7 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                             f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                             f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{team_name}</b> "
                             f"where <b>{team_data[3][0]}</b> and <b>{team_data[3][1]}</b> while there were "
-                            f"<b>No</b> <b><font color=#d20614>Unsuccessful Passes</font></b>.",
+                            f"<b>No</b> <b><font color=#392864>Unsuccessful Passes</font></b>.",
                             unsafe_allow_html=True)
             else:
                 with info_team:
@@ -510,14 +510,14 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                                 f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{opp_label}</b> "
                                 f"where <b>{opp_data[3][0]}</b> and <b>{opp_data[3][1]}</b> while most of the "
-                                f"<b><font color=#d20614>Unsuccessful Passes</font></b> of <b>{opp_label}</b> where "
+                                f"<b><font color=#392864>Unsuccessful Passes</font></b> of <b>{opp_label}</b> where "
                                 f"<b>{opp_data[4][0]}</b> and <b>{opp_data[4][1]}</b>.",
                                 unsafe_allow_html=True)
                         elif opp_data[3] is None and opp_data[4] is not None:
                             st.markdown(
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, <b>"
                                 f"{opp_label}</b> had <b>No</b> <b><font color=#d20614>Successful Passes</font></b> "
-                                f"while most of the <b><font color=#d20614>Unsuccessful Passes</font></b> of <b>"
+                                f"while most of the <b><font color=#392864>Unsuccessful Passes</font></b> of <b>"
                                 f"{opp_label}</b> where <b>{opp_data[4][0]}</b> and <b>{opp_data[4][1]}"
                                 f"</b>.", unsafe_allow_html=True)
                         elif opp_data[3] is not None and opp_data[4] is None:
@@ -525,7 +525,7 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                 f"Between Minute <b>{time_filter[0]}</b> and Minute <b>{time_filter[1]}</b>, most of "
                                 f"the <b><font color=#d20614>Successful Passes</font></b> of <b>{opp_label}</b> "
                                 f"where <b>{opp_data[3][0]}</b> and <b>{opp_data[3][1]}</b> while there were "
-                                f"<b>No</b> <b><font color=#d20614>Unsuccessful Passes</font></b>.",
+                                f"<b>No</b> <b><font color=#392864>Unsuccessful Passes</font></b>.",
                                 unsafe_allow_html=True)
             else:
                 with info_opp:
