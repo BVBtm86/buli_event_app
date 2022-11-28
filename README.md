@@ -8,15 +8,15 @@ App Features
 * Select your favourite Player
 * Types of Analysis:
   1. Event Level Data per Match Day
-    - Starting 11
-    - Game Events
-    - Passing Network
-    - Passing Direction
-    - Passing Sequence
+     - Starting 11
+     - Game Events
+     - Passing Network
+     - Passing Direction
+     - Passing Sequence
   2. Event Level Data per Team
-    - Game Events
-    - Passing Network
-    - Passing Direction
+     - Game Events
+     - Passing Network
+     - Passing Direction
   3. Event Level Data per Player
      - Game Events
      - Passing Network
