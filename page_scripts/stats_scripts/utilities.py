@@ -199,27 +199,27 @@ def games_player_played(team, player_name):
 def players_query(team_sql, player_name_sql, player_option, match_day_sql, period_sql, venue_sql, result_sql):
     """ Return Game Events """
     if player_option == "By Game":
-        player_query = supabase.table('game_events_stats').select('*'). \
+        player_query = supabase.table('buli_events_stats').select('*'). \
             eq('Team', team_sql).eq("Player Name", player_name_sql).eq("Match Day", match_day_sql).execute().data
     else:
         if venue_sql == "All Games":
             if result_sql == "All Results":
-                player_query = supabase.table('game_events_stats'). \
+                player_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
                     gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).execute().data
             else:
-                player_query = supabase.table('game_events_stats'). \
+                player_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
                     gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).\
                     eq('Result', result_sql).execute().data
         else:
             if result_sql == "All Results":
-                player_query = supabase.table('game_events_stats'). \
+                player_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
                     gt('Match Day', period_sql[0] - 1).\
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql).execute().data
             else:
-                player_query = supabase.table('game_events_stats'). \
+                player_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).eq("Player Name", player_name_sql).\
                     gt('Match Day', period_sql[0] - 1).lt('Match Day', period_sql[1] + 1).\
                     eq('Venue', venue_sql).eq('Result', result_sql).execute().data
