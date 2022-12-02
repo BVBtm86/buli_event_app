@@ -19,7 +19,7 @@ supabase = init_connection()
 @st.experimental_memo(ttl=600, show_spinner=False)
 def info_query():
     """ Return Game Info """
-    game_info_query = supabase.table('game_info_stats').select('*').execute().data
+    game_info_query = supabase.table('buli_events_team_info').select('*').execute().data
     game_info = pd.DataFrame(game_info_query)
 
     return game_info
@@ -28,10 +28,10 @@ def info_query():
 @st.experimental_memo(ttl=600, show_spinner=False)
 def players_info_query(team, match_day):
     """ Return Player Game Info """
-    game_player_query_team = supabase.table('game_player_info').select('*'). \
+    game_player_query_team = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).eq('Match Day', match_day).execute().data
     game_player_team_df = pd.DataFrame(game_player_query_team)
-    game_player_query_opp = supabase.table('game_player_info').select('*'). \
+    game_player_query_opp = supabase.table('buli_events_player_info').select('*'). \
         eq('Opponent', team).eq('Match Day', match_day).execute().data
     game_player_opp_df = pd.DataFrame(game_player_query_opp)
 
@@ -43,10 +43,10 @@ def players_info_query(team, match_day):
 @st.experimental_memo(ttl=600, show_spinner=False)
 def event_query(team, match_day):
     """ Return Game Events """
-    game_team_query = supabase.table('game_events_stats').select('*'). \
+    game_team_query = supabase.table('buli_events_stats').select('*'). \
         eq('Team', team).eq('Match Day', match_day).execute().data
     game_team_df = pd.DataFrame(game_team_query)
-    game_opp_query = supabase.table('game_events_stats').select('*'). \
+    game_opp_query = supabase.table('buli_events_stats').select('*'). \
         eq('Opponent', team).eq('Match Day', match_day).execute().data
     game_opp_df = pd.DataFrame(game_opp_query)
 
@@ -83,33 +83,33 @@ def team_query(team_sql, opponent_sql, period_sql, venue_sql, result_sql):
             result_opp_sql = "Draw"
         if venue_sql == "All Games":
             if result_sql == "All Results":
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Opponent', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).execute().data
             else:
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Result', result_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Opponent', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Result', result_opp_sql).execute().data
         else:
             if result_sql == "All Results":
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Opponent', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_opp_sql).execute().data
             else:
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql). \
                     eq('Result', result_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Opponent', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_opp_sql). \
                     eq('Result', result_opp_sql).execute().data
@@ -118,33 +118,33 @@ def team_query(team_sql, opponent_sql, period_sql, venue_sql, result_sql):
         result_opp_sql = result_sql
         if venue_sql == "All Games":
             if result_sql == "All Results":
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).execute().data
             else:
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Result', result_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Result', result_opp_sql).execute().data
         else:
             if result_sql == "All Results":
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_opp_sql).execute().data
             else:
-                game_team_query = supabase.table('game_events_stats'). \
+                game_team_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', team_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_sql). \
                     eq('Result', result_sql).execute().data
-                game_opp_query = supabase.table('game_events_stats'). \
+                game_opp_query = supabase.table('buli_events_stats'). \
                     select('*').eq('Team', opponent_sql).gt('Match Day', period_sql[0] - 1). \
                     lt('Match Day', period_sql[1] + 1).eq('Venue', venue_opp_sql). \
                     eq('Result', result_opp_sql).execute().data
@@ -160,7 +160,7 @@ def team_query(team_sql, opponent_sql, period_sql, venue_sql, result_sql):
 @st.experimental_memo(ttl=600, show_spinner=False)
 def team_players_query(team, match_days):
     """ Return Player Game Info """
-    team_player_query = supabase.table('game_player_info').select('*'). \
+    team_player_query = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).execute().data
     team_player_team_df = pd.DataFrame(team_player_query)
     team_player_team_df = team_player_team_df[team_player_team_df['Match Day'].isin(match_days)].reset_index(drop=True)
@@ -171,7 +171,7 @@ def team_players_query(team, match_days):
 @st.experimental_memo(ttl=600, show_spinner=False)
 def avg_keep_players(team, current_match_day):
     """ Return Player With more than 10% Minute Played """
-    team_player_query = supabase.table('game_player_info').select('*'). \
+    team_player_query = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).execute().data
     team_players = pd.DataFrame(team_player_query)
     group_players = team_players.groupby('Player Name')['Minutes Played'].sum()
@@ -186,7 +186,7 @@ def avg_keep_players(team, current_match_day):
 @st.experimental_memo(ttl=600, show_spinner=False)
 def games_player_played(team, player_name):
     """ Return Player With more than 10% Minute Played """
-    player_query = supabase.table('game_player_info').select('*'). \
+    player_query = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).eq("Player Name", player_name).execute().data
     player_games = pd.DataFrame(player_query)
 
@@ -232,7 +232,7 @@ def players_query(team_sql, player_name_sql, player_option, match_day_sql, perio
 @st.experimental_memo(ttl=600, show_spinner=False)
 def avg_keep_players_opponent(team, current_match_day, match_day, player_name):
     """ Return Player With more than 10% Minute Played """
-    team_player_query = supabase.table('game_player_info').select('*'). \
+    team_player_query = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).execute().data
     team_players = pd.DataFrame(team_player_query)
     group_players = team_players.groupby('Player Name')['Minutes Played'].sum()
@@ -241,7 +241,7 @@ def avg_keep_players_opponent(team, current_match_day, match_day, player_name):
     season_players = list(group_players[group_players > min_threshold].index)
 
     if match_day is not None:
-        team_day_query = supabase.table('game_player_info').select('*'). \
+        team_day_query = supabase.table('buli_events_player_info').select('*'). \
             eq('Team', team).eq("Match Day", match_day).execute().data
         team_day_df = pd.DataFrame(team_day_query)
         day_players = list(team_day_df['Player Name'].unique())
@@ -257,7 +257,7 @@ def avg_keep_players_opponent(team, current_match_day, match_day, player_name):
 @st.experimental_memo(ttl=600, show_spinner=False)
 def players_jersey_query(team, team_opp):
     """ Return Player Jersey """
-    players_jerseys = supabase.table('game_player_info').select('*'). \
+    players_jerseys = supabase.table('buli_events_player_info').select('*'). \
         eq('Team', team).execute().data
     players_jerseys_df = pd.DataFrame(players_jerseys)
     players_jerseys_df = players_jerseys_df[['Player Name', 'Jersey No']].reset_index(drop=True)
@@ -265,7 +265,7 @@ def players_jersey_query(team, team_opp):
     players_jerseys_df.reset_index(drop=True, inplace=True)
 
     if team_opp is not None:
-        opponent_jerseys = supabase.table('game_player_info').select('*'). \
+        opponent_jerseys = supabase.table('buli_events_player_info').select('*'). \
             eq('Team', team_opp).execute().data
         opponent_jerseys_df = pd.DataFrame(opponent_jerseys)
         opponent_jerseys_df = opponent_jerseys_df[['Player Name', 'Jersey No']].reset_index(drop=True)
