@@ -91,10 +91,9 @@ def main():
     if event_analysis == 'Home':
         st.markdown("")
         st.markdown(
-            '<h5>A Statistical application that allows the user to analyse Bundesliga Game Events Data for '
-            'Team and Players</h5>', unsafe_allow_html=True)
+            '<b>A Statistical application that allows the user to analyse Bundesliga Game Events Data for '
+            'Team and Players</b>', unsafe_allow_html=True)
 
-        st.header("")
         st.markdown("<b>App Features</b>", unsafe_allow_html=True)
         """ 
         * Select your favourite team
@@ -115,7 +114,6 @@ def main():
                 * Passing Network
                 * Passing Direction
         """
-        st.header("")
 
     elif event_analysis == 'Game':
         # ##### Filter by Team and Match Day
@@ -323,8 +321,18 @@ def main():
                       current_match_day=max_match_day)
 
     if event_analysis == 'Home':
+        # ##### App Description
+        st.markdown(
+            f"<b><font color=#d20614>Data Reference:</font></b><ul><li><a href='https://www.whoscored.com' "
+            "style='text-decoration: none; '>Game Events Stats</a></li></ul>", unsafe_allow_html=True)
+        st.markdown(
+                f"<b><font color=#d20614>App Development</font></b><ul><li><a href='https://supabase.com' "
+                "style='text-decoration: none; '>Database Storage</a></li><li><a href='https://streamlit.io' "
+                "style='text-decoration: none; '>UI Framework</a></li><li>"
+                "<a href='https://github.com/BVBtm86/buli_event_app' style='text-decoration: none; '"
+                ">Code Repo</a></li>", unsafe_allow_html=True)
         # ##### Footer Page
-        ref_col, fan_club_name, fan_club_logo = st.columns([10, 1, 1])
+        _, fan_club_name, fan_club_logo = st.columns([10, 1, 1])
         with fan_club_name:
             st.markdown(f"<p style='text-align: left;'p>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align: right;'p>Created By: ", unsafe_allow_html=True)
@@ -334,10 +342,7 @@ def main():
             st.markdown("@ <b><font color = #d20614 style='text-align: center;'>"
                         "<a href='mailto:omescu.mario.lucian@gmail.com' style='text-decoration: none; '>"
                         "Mario Omescu</a></font></b>", unsafe_allow_html=True)
-        with ref_col:
-            st.markdown(
-                f"<b><font color=#d20614>Data Reference:</font></b><ul><li><a href='https://www.whoscored.com' "
-                "style='text-decoration: none; '>Game Event Stats</a></li></ul>", unsafe_allow_html=True)
+
 
 
 if __name__ == '__main__':
