@@ -94,7 +94,7 @@ def main():
             '<b>A Statistical application that allows the user to analyse Bundesliga Game Events Data for '
             'Team and Players</b>', unsafe_allow_html=True)
 
-        st.markdown("<b>App Features</b>", unsafe_allow_html=True)
+        st.markdown("<font color=#d20614><b>App Features</b></font>", unsafe_allow_html=True)
         """ 
         * Select your favourite team
         * Select your favourite Player
@@ -323,7 +323,7 @@ def main():
     if event_analysis == 'Home':
         # ##### App Description
         st.markdown(
-            f"<b><font color=#d20614>Data Reference:</font></b><ul><li><a href='https://www.whoscored.com' "
+            f"<b><font color=#d20614>Data Reference</font></b><ul><li><a href='https://www.whoscored.com' "
             "style='text-decoration: none; '>Game Events Stats</a></li></ul>", unsafe_allow_html=True)
         st.markdown(
                 f"<b><font color=#d20614>App Development</font></b><ul><li><a href='https://supabase.com' "
@@ -342,7 +342,6 @@ def main():
             st.markdown("@ <b><font color = #d20614 style='text-align: center;'>"
                         "<a href='mailto:omescu.mario.lucian@gmail.com' style='text-decoration: none; '>"
                         "Mario Omescu</a></font></b>", unsafe_allow_html=True)
-
 
 
 if __name__ == '__main__':
