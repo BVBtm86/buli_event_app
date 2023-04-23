@@ -148,8 +148,8 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                                           (team_data['Minute'] <= time_filter[1]) &
                                           (team_data[event_stat] == event_analysis)]
             else:
-                final_team_df = team_data[(team_data['Period'].isin(filter_event_outcome)) &
-                                          (team_data['Outcome'] == event_outcome) &
+                final_team_df = team_data[(team_data['Period'] == game_time) &
+                                          (team_data['Outcome'].isin(filter_event_outcome)) &
                                           (team_data['Minute'] >= time_filter[0]) &
                                           (team_data['Minute'] <= time_filter[1]) &
                                           (team_data[event_stat] == event_analysis)]
@@ -351,7 +351,6 @@ def team_events(data, players_data, analysis_option, analysis_team, team_name, o
                         f" <b><font color=#d20614>{top_insights[1]}</font></b> was involved in most of them with <b>"
                         f"<font color=#d20614>{int(top_insights[2])}</font></b> out of <b><font color=#d20614>"
                         f"{top_insights[0]}</font></b>  Successful Passes between Players.", unsafe_allow_html=True)
-
     elif analysis_option == "Passing Distance":
         page_container = st.empty()
         with page_container.container():
