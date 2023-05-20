@@ -1,4 +1,4 @@
-streamlit==1.10.0
+streamlit==1.22.0
 pandas~=1.5.2
 supabase~=0.7.1
 mplsoccer==1.1.9
